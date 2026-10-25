@@ -15,7 +15,7 @@ features:
   trashCan: false
 extraPros:
   - Water on both sides of the rise
-  - Big open sky, good for sunsets
+  - Big open sky
 extraCons: []
 photos:
   - file: img_2472.jpg

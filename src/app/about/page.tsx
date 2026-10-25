@@ -68,6 +68,19 @@ export default function AboutPage() {
           hand.
         </p>
 
+        <h2>Sunrise and sunset notes</h2>
+        <p>
+          The compass direction of the view photo tells us which way the seat faces. From that and FishHawk&apos;s
+          latitude, the site works out where the sun rises and sets on the horizon in each month. If that spot
+          falls within your view from the seat (about 35° either side of straight ahead), the bench gets a note
+          like &quot;Sets in front of you, May to August&quot;. The sun swings north in summer and south in
+          winter, which is why some benches only catch it part of the year.
+        </p>
+        <p>
+          It&apos;s worked out from geometry, not watched in person. Trees or rooftops across the water can hide
+          the sun itself, which is why benches in full shade don&apos;t get it as a pro.
+        </p>
+
         <h2>Things change</h2>
         <p>
           Trees grow, benches get moved, trash cans come and go. Each bench page shows the date it was added. If

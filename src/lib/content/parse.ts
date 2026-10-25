@@ -1,6 +1,7 @@
 // Pure parsing for bench files: no fs, so it can be unit-tested and reused by scripts.
 import { parse as parseYaml } from "yaml";
 import { compassPoint, type CompassPoint } from "../geo.ts";
+import { sunNote, type SunNote } from "../sun.ts";
 import { benchFrontmatterSchema, SLUG_PATTERN, type BenchFrontmatter, type BenchPhoto } from "./schema.ts";
 import { prosAndCons, tagsFor, type TagSlug } from "./traits.ts";
 
@@ -13,6 +14,8 @@ export type Bench = BenchFrontmatter & {
   /** Degrees from north the seat faces, if known. */
   facingDegrees: number | null;
   facingPoint: CompassPoint | null;
+  /** Where the sun rises/sets relative to the seat; null when the facing direction is unknown. */
+  sun: SunNote | null;
   panorama: BenchPhoto | null;
   view: BenchPhoto | null;
   /** Photos of the bench and its surroundings, in file order. */
@@ -54,7 +57,8 @@ export function parseBenchSource(slug: string, source: string): ParseResult {
 
   const view = fm.photos.find((p) => p.role === "view") ?? null;
   const facingDegrees = fm.facing ?? view?.heading ?? null;
-  const { pros, cons } = prosAndCons(fm.features, fm);
+  const sun = facingDegrees === null ? null : sunNote(facingDegrees, fm.location.lat);
+  const { pros, cons } = prosAndCons(fm.features, fm, sun);
 
   return {
     ok: true,
@@ -64,7 +68,8 @@ export function parseBenchSource(slug: string, source: string): ParseResult {
       body,
       pros,
       cons,
-      tags: tagsFor(fm.features),
+      tags: tagsFor(fm.features, sun),
+      sun,
       facingDegrees,
       facingPoint: facingDegrees === null ? null : compassPoint(facingDegrees),
       panorama: fm.photos.find((p) => p.role === "panorama") ?? null,

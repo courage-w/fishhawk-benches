@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CompassArrow, DashIcon, LeafIcon } from "./icons";
 import { photoSrc, type Bench } from "@/lib/content/parse";
 import { SHADE_LABEL, TAGS } from "@/lib/content/traits";
+import { sunSummary } from "@/lib/sun";
 
 export function facingSentence(bench: Bench): string | null {
   return bench.facingPoint ? `Faces ${bench.facingPoint}` : null;
@@ -17,6 +18,8 @@ export function featureLine(bench: Bench): string {
     f.shade === "full" ? "full shade" : f.shade === "partial" ? "some shade" : "no shade",
   ];
   if (f.trashCan) parts.push("trash can");
+  if (bench.tags.includes("sunsets")) parts.push("sunsets");
+  if (bench.tags.includes("sunrises")) parts.push("sunrises");
   const text = parts.join(", ");
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
@@ -66,6 +69,7 @@ export function FactList({ bench }: { bench: Bench }) {
     ["Shade", SHADE_LABEL[f.shade]],
     ["Trash can", f.trashCan ? "Right beside it" : "No"],
     ["Road", f.facesRoad ? "In front of you" : f.roadNearby ? "Nearby" : "Out of sight"],
+    ...(bench.sun ? [["Sun", sunSummary(bench.sun)] as [string, string]] : []),
   ];
   return (
     <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2">

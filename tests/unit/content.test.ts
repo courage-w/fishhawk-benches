@@ -29,7 +29,10 @@ describe("parseBenchSource", () => {
     expect(r.bench.view?.file).toBe("view.jpg");
     expect(r.bench.panorama?.file).toBe("pano.jpg");
     expect(r.bench.pros).toContain("Trash can right next to it");
-    expect(r.bench.tags).toEqual(["water-view", "trash-can", "away-from-roads"]);
+    // Facing 317° at 27.85°N: early-summer sunsets fall in view, and partial shade still sees the sky.
+    expect(r.bench.sun).toMatchObject({ kind: "sunset", when: "May to August" });
+    expect(r.bench.pros).toContain("Faces the sunset, May to August");
+    expect(r.bench.tags).toEqual(["water-view", "trash-can", "away-from-roads", "sunsets"]);
   });
 
   it("rejects unsafe or malformed slugs", () => {
@@ -98,6 +101,16 @@ describe("prosAndCons", () => {
     );
     expect(open.pros).toEqual(["Looks out over the water"]);
     expect(open.cons).toEqual(["A road runs close by", "No shade, so it gets hot at midday", "Houses across the pond"]);
+  });
+
+  it("adds sunrise/sunset pros only for benches that can see the sky", () => {
+    const sunset = { kind: "sunset" as const, months: [4, 5, 6, 7], when: "May to August" };
+    const open = { waterView: true, facesRoad: false, roadNearby: false, shade: "none" as const, trashCan: false };
+    expect(prosAndCons(open, {}, sunset).pros).toContain("Faces the sunset, May to August");
+    expect(tagsFor(open, sunset)).toContain("sunsets");
+    const shady = { ...open, shade: "full" as const };
+    expect(prosAndCons(shady, {}, sunset).pros.join()).not.toMatch(/sunset/);
+    expect(tagsFor(shady, sunset)).not.toContain("sunsets");
   });
 
   it("tags quiet benches only when no road is involved", () => {

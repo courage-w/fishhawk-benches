@@ -40,7 +40,9 @@ remove the file and its `photos:` entry.
   - `waterView` pond/lake visible from the seat · `facesRoad` the seat looks at a road ·
     `roadNearby` a road is close but not in front · `shade` none/partial/full · `trashCan` one
     right beside the bench.
-  Pros/cons are generated from these (see `RULES` in `src/lib/content/traits.ts`). Use
+  Pros/cons are generated from these (see `RULES` in `src/lib/content/traits.ts`). Sunrise and
+  sunset notes are computed from the view photo's heading and the latitude (`src/lib/sun.ts`),
+  so never hand-write sun pros; if the heading is wrong, fix it or set `facing`. Use
   `extraPros` / `extraCons` only for things the rules don't cover (≤140 chars each).
 - **dates**: `addedAt` YYYY-MM-DD. When editing an existing bench later, add `updatedAt`.
 - **body**: a few honest sentences. Markdown only: no HTML, no images, no MDX. Internal links

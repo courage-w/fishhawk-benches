@@ -1,5 +1,6 @@
 // Turns a bench's features into consistent pros, cons and tags, so every bench
 // is judged by the same rules. The About page shows these rules to readers.
+import type { SunNote } from "../sun.ts";
 import type { BenchFeatures } from "./schema.ts";
 
 export type Tag = {
@@ -30,17 +31,32 @@ export const TAGS = {
     label: "Away from roads",
     description: "Benches where the road is out of sight and out of earshot.",
   },
+  sunsets: {
+    slug: "sunsets",
+    label: "Sunsets",
+    description: "Open benches where the sun sets in front of you for at least part of the year.",
+  },
+  sunrises: {
+    slug: "sunrises",
+    label: "Sunrises",
+    description: "Open benches where the sun comes up in front of you for at least part of the year.",
+  },
 } as const satisfies Record<string, Tag>;
 
 export type TagSlug = keyof typeof TAGS;
 export const TAG_SLUGS = Object.keys(TAGS) as TagSlug[];
 
-export function tagsFor(f: BenchFeatures): TagSlug[] {
+/** Sunrise/sunset only counts when trees don't block the sky in front of you. */
+const seesSky = (f: BenchFeatures) => f.shade !== "full";
+
+export function tagsFor(f: BenchFeatures, sun: SunNote | null = null): TagSlug[] {
   const tags: TagSlug[] = [];
   if (f.waterView) tags.push("water-view");
   if (f.shade === "full") tags.push("shaded");
   if (f.trashCan) tags.push("trash-can");
   if (!f.roadNearby && !f.facesRoad) tags.push("away-from-roads");
+  if (sun?.kind === "sunset" && seesSky(f)) tags.push("sunsets");
+  if (sun?.kind === "sunrise" && seesSky(f)) tags.push("sunrises");
   return tags;
 }
 
@@ -54,11 +70,20 @@ export const RULES: { when: string; pro?: string; con?: string }[] = [
   { when: "Nothing shades it", con: "No shade, so it gets hot at midday" },
   { when: "A trash can is right beside it", pro: "Trash can right next to it" },
   { when: "There's no road in sight or earshot", pro: "Quiet and away from traffic" },
+  {
+    when: "The sun sets within your view for part of the year, and trees don't fully shade the seat",
+    pro: "Faces the sunset (with the months it does)",
+  },
+  {
+    when: "The sun rises within your view for part of the year, and trees don't fully shade the seat",
+    pro: "Faces the sunrise (with the months it does)",
+  },
 ];
 
 export function prosAndCons(
   f: BenchFeatures,
   extra: { extraPros?: string[]; extraCons?: string[] } = {},
+  sun: SunNote | null = null,
 ): { pros: string[]; cons: string[] } {
   const pros: string[] = [];
   const cons: string[] = [];
@@ -72,6 +97,8 @@ export function prosAndCons(
   if (f.shade === "none") cons.push(rule(5).con!);
   if (f.trashCan) pros.push(rule(6).pro!);
   if (!f.roadNearby && !f.facesRoad) pros.push(rule(7).pro!);
+  if (sun?.kind === "sunset" && seesSky(f)) pros.push(`Faces the sunset, ${sun.when}`);
+  if (sun?.kind === "sunrise" && seesSky(f)) pros.push(`Faces the sunrise, ${sun.when}`);
 
   return {
     pros: [...pros, ...(extra.extraPros ?? [])],
