@@ -28,7 +28,7 @@ export function BenchArchive({ title, intro, benches, page, totalPages, hrefFor,
             <Link
               href="/benches"
               aria-current={activeTag ? undefined : "page"}
-              className="inline-flex min-h-11 items-center rounded-full border border-rule px-4 text-base text-ink-soft no-underline hover:border-pond hover:text-pond aria-[current=page]:border-pond aria-[current=page]:bg-pond aria-[current=page]:text-paper"
+              className="inline-flex min-h-11 items-center rounded-full border border-rule px-4 text-base text-ink-soft no-underline hover:border-pond hover:text-pond aria-[current=page]:border-pond aria-[current=page]:bg-pond aria-[current=page]:text-paper aria-[current=page]:hover:bg-pond-deep aria-[current=page]:hover:text-paper"
             >
               All
             </Link>
@@ -38,7 +38,7 @@ export function BenchArchive({ title, intro, benches, page, totalPages, hrefFor,
               <Link
                 href={`/benches/tag/${t}`}
                 aria-current={activeTag === t ? "page" : undefined}
-                className="inline-flex min-h-11 items-center rounded-full border border-rule px-4 text-base text-ink-soft no-underline hover:border-pond hover:text-pond aria-[current=page]:border-pond aria-[current=page]:bg-pond aria-[current=page]:text-paper"
+                className="inline-flex min-h-11 items-center rounded-full border border-rule px-4 text-base text-ink-soft no-underline hover:border-pond hover:text-pond aria-[current=page]:border-pond aria-[current=page]:bg-pond aria-[current=page]:text-paper aria-[current=page]:hover:bg-pond-deep aria-[current=page]:hover:text-paper"
               >
                 {TAGS[t].label} ({tagCounts[t]})
               </Link>

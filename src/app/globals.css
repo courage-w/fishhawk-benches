@@ -72,15 +72,19 @@ body {
   color: var(--ink);
 }
 
-a {
-  color: var(--pond);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.18em;
-  transition: color 160ms ease, text-decoration-color 160ms ease;
-}
-a:hover {
-  color: var(--pond-deep);
-  text-decoration-thickness: 2px;
+/* In the base layer so Tailwind utilities (text-ink, text-paper…) can override link colors.
+   Unlayered rules beat every layer, which made selected filter chips pond-on-pond. */
+@layer base {
+  a {
+    color: var(--pond);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+    transition: color 160ms ease, text-decoration-color 160ms ease;
+  }
+  a:hover {
+    color: var(--pond-deep);
+    text-decoration-thickness: 2px;
+  }
 }
 
 :focus-visible {

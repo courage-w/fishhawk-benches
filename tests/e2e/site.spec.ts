@@ -154,6 +154,20 @@ test.describe("navigation", () => {
     }
   });
 
+  for (const scheme of ["light", "dark"] as const) {
+    test(`selected filter is readable in ${scheme} mode`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.goto("/benches/tag/shaded");
+      const chip = page.getByRole("navigation", { name: "Filter benches" }).locator('a[aria-current="page"]');
+      await chip.hover();
+      const { color, bg } = await chip.evaluate((el) => {
+        const s = getComputedStyle(el);
+        return { color: s.color, bg: s.backgroundColor };
+      });
+      expect(color).not.toBe(bg);
+    });
+  }
+
   test("map toggles hide and show trash cans", async ({ page }) => {
     await page.goto("/map");
     const trashPins = page.locator(".leaflet-container .pin-trash");
