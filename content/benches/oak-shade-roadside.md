@@ -49,6 +49,10 @@ photos:
     height: 1233
     takenAt: 2026-10-25T10:46:22-04:00
     heading: 121
+    # Set by hand: the automatic match wasn't confident for this one.
+    seatView:
+      center: 0.33
+      width: 0.24
   - file: img_2447.jpg
     role: bench
     alt: The bench from the side, under hanging Spanish moss, with the sidewalk and

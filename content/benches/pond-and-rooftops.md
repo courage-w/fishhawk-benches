@@ -42,6 +42,9 @@ photos:
     height: 1256
     takenAt: 2026-10-25T10:50:19-04:00
     heading: 296
+    seatView:
+      center: 0.407
+      width: 0.15
 ---
 
 The lawn drops gently toward a calm pond, and an oak behind the bench throws shade over part of it.

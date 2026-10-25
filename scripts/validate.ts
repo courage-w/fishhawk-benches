@@ -16,6 +16,8 @@ for (const bench of benches) {
   const where = `content/benches/${bench.slug}.md`;
   if (bench.status === "draft") warnings.push(`${where}: still a draft (won't appear on the site)`);
   if (!bench.panorama) warnings.push(`${where}: no panorama photo`);
+  else if (!bench.panorama.seatView && bench.view)
+    warnings.push(`${where}: panorama has no seat-view lines yet (run \`npm run locate-views\`)`);
   if (bench.facingDegrees === null) warnings.push(`${where}: facing direction unknown (no heading on the view photo)`);
   if (/!\[|<[a-z]/i.test(bench.body)) errors.push(`${where}: body must not contain images or HTML; use the photos list`);
 

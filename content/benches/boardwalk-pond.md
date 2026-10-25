@@ -57,6 +57,9 @@ photos:
     height: 1242
     takenAt: 2026-10-25T11:44:30-04:00
     heading: 142
+    seatView:
+      center: 0.488
+      width: 0.147
 ---
 
 The bench sits right on the path above a pond fringed with reeds. Across the water there's a long line of oaks with a few rooftops between them.

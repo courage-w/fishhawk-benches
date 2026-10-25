@@ -58,6 +58,9 @@ photos:
     height: 1300
     takenAt: 2026-10-25T11:33:13-04:00
     heading: 303
+    seatView:
+      center: 0.441
+      width: 0.188
 ---
 
 The path climbs a low grassy rise between two ponds, and the bench sits right at the top. Woods wrap around the far shore and the sky opens up overhead.

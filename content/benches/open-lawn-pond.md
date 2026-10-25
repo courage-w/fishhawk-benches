@@ -57,6 +57,9 @@ photos:
     height: 1314
     takenAt: 2026-10-25T10:44:01-04:00
     heading: 324
+    seatView:
+      center: 0.394
+      width: 0.251
 ---
 
 This one sits out on the grass a little way off the sidewalk, angled toward the pond. Oaks and Spanish moss line the far bank, so the view feels further away from the neighborhood than it really is.

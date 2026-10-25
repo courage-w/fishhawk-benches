@@ -49,6 +49,9 @@ photos:
     height: 1247
     takenAt: 2026-10-25T10:54:53-04:00
     heading: 96
+    seatView:
+      center: 0.439
+      width: 0.237
 ---
 
 Tucked under some of the largest oaks on this walk, with moss hanging overhead.

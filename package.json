@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "audit": "npm audit --omit=dev",
-    "check": "npm run lint && npm run typecheck && npm run validate && npm run test && npm run build"
+    "check": "npm run lint && npm run typecheck && npm run validate && npm run test && npm run build",
+    "locate-views": "node scripts/locate-views.ts"
   },
   "dependencies": {
     "leaflet": "^1.9.4",

@@ -45,6 +45,11 @@ remove the file and its `photos:` entry.
 - **dates**: `addedAt` YYYY-MM-DD. When editing an existing bench later, add `updatedAt`.
 - **body**: a few honest sentences. Markdown only: no HTML, no images, no MDX. Internal links
   like `/benches/<slug>` must point to existing benches; external links must be https.
+- **seat-view lines**: once the `view` and `panorama` roles are right, run
+  `npm run locate-views -- --preview` and open `.seat-view-preview/<slug>.jpg`. The yellow box
+  must frame the same scene as the view photo. If it says "not confident" or the box is wrong,
+  set `seatView: { center, width }` on the panorama by hand (fractions of its width) and add a
+  comment saying it was set by hand.
 - Remove every `TODO`. Set `status: published` only when the user agrees it's ready.
 - Don't invent facts (names of streets, parks, HOAs) that aren't visible or confirmed by the user.
 

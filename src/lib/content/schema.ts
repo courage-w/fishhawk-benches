@@ -25,6 +25,14 @@ export const photoSchema = z
     takenAt: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[+-]\d{2}:\d{2}|Z)?$/).optional(),
     /** Compass direction the camera pointed, 0–360 degrees from north. */
     heading: z.number().min(0).max(360).optional(),
+    /**
+     * Panorama only: where the view from the seat is, as fractions of the panorama's width
+     * (center 0 = left edge, 1 = right edge). Filled in by `npm run locate-views`.
+     */
+    seatView: z
+      .object({ center: z.number().min(0).max(1), width: z.number().gt(0).max(1) })
+      .strict()
+      .optional(),
   })
   .strict();
 

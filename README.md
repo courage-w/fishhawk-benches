@@ -41,8 +41,14 @@ Open http://localhost:3000. Edits to code and content show up as you save.
    `view`, alt text for every photo, and the `features` (water view, shade, trash can, road).
    Pros and cons are generated from those features. Rename the file to a nice slug like
    `shady-pond-corner.md`, and rename its photo folder to match.
-6. Preview drafts with `SHOW_DRAFTS=true npm run dev`. When happy, set `status: published`.
-7. Check everything:
+6. Mark where the seat view is inside the panorama (the two lines on the page):
+   ```bash
+   npm run locate-views -- --preview
+   ```
+   Check the yellow boxes in `.seat-view-preview/`. If one is wrong or "not confident", set
+   `seatView: { center: 0.4, width: 0.25 }` on the panorama photo by hand (fractions of its width).
+7. Preview drafts with `SHOW_DRAFTS=true npm run dev`. When happy, set `status: published`.
+8. Check everything:
    ```bash
    npm run validate
    npm run check
@@ -95,6 +101,7 @@ A few sentences in Markdown. No HTML.
 | `npm run test:e2e` | Browser tests incl. accessibility and performance budget (Playwright; run `npm run build` first and `npx playwright install chromium` once) |
 | `npm run check` | lint + typecheck + validate + test + build |
 | `npm run ingest` | Import photos into draft benches |
+| `npm run locate-views` | Find the seat view inside each panorama (`--all` to redo, `--preview` to check) |
 
 ## Environment variables
 

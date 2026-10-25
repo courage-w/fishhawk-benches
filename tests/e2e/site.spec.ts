@@ -85,6 +85,28 @@ test.describe("bench pages", () => {
     await expect(page.locator(".bench-map .pin-bench").first()).toBeVisible();
   });
 
+  test("panorama fills wide screens and opens on the seat view", async ({ page }, info) => {
+    test.skip(info.project.name === "mobile", "wide-screen check");
+    await page.setViewportSize({ width: 2800, height: 1200 });
+    await page.goto("/benches/bend-in-the-path");
+    const strip = page.getByRole("region", { name: /Panorama from the bench/ });
+    const img = strip.locator("img");
+    await expect(img).toBeVisible();
+    const [stripBox, imgBox] = [await strip.boundingBox(), await img.boundingBox()];
+    expect(imgBox!.width).toBeGreaterThanOrEqual(stripBox!.width - 1);
+
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.reload();
+    const lines = strip.locator(".seat-view");
+    await expect(lines).toBeVisible();
+    const linesBox = (await lines.boundingBox())!;
+    const box = (await strip.boundingBox())!;
+    // The seat view starts in sight: its middle is within the visible part of the strip.
+    const middle = linesBox.x + linesBox.width / 2;
+    expect(middle).toBeGreaterThan(box.x);
+    expect(middle).toBeLessThan(box.x + box.width);
+  });
+
   test("have accurate metadata and structured data", async ({ page }) => {
     await page.goto("/benches/oak-shade-roadside");
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/benches\/oak-shade-roadside$/);

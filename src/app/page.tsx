@@ -44,11 +44,13 @@ export default function HomePage() {
             alt={hero.panorama.alt}
             width={hero.panorama.width}
             height={hero.panorama.height}
+            seatView={hero.panorama.seatView}
             label={`Panorama from ${hero.title}. Scroll sideways to look around.`}
             eager
           />
           <figcaption className="frame meta mt-3">
             From <Link href={`/benches/${hero.slug}`}>{hero.title}</Link>. Swipe or drag sideways to look around.
+            {hero.panorama.seatView && " The two lines frame the view from the seat."}
           </figcaption>
         </figure>
       )}

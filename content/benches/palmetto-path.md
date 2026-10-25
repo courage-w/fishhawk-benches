@@ -48,6 +48,9 @@ photos:
     height: 1276
     takenAt: 2026-10-25T11:14:18-04:00
     heading: 170
+    seatView:
+      center: 0.389
+      width: 0.243
 ---
 
 This is the most tucked-away bench so far. The path curves through a lawn under old oaks, and the bench sits at the edge of the palmettos.

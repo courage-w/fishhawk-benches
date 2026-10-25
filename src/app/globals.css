@@ -197,12 +197,45 @@ a:hover {
   cursor: grabbing;
   user-select: none;
 }
+/* 16–34rem tall, but never narrower than the screen: on very wide screens it grows taller instead
+   of leaving an empty band beside the photo. */
+.pano-track {
+  position: relative;
+  width: max(100%, calc(clamp(16rem, 52vh, 34rem) * var(--pano-aspect)));
+}
 .panorama img {
-  height: clamp(16rem, 52vh, 34rem);
-  width: auto;
+  width: 100%;
+  height: auto;
   max-width: none;
   display: block;
   -webkit-user-drag: none;
+}
+
+/* Two quiet lines framing what you see sitting on the bench. */
+.seat-view {
+  position: absolute;
+  inset-block: 0;
+  border-inline: 2px solid rgb(255 255 255 / 0.85);
+  box-shadow:
+    inset 1px 0 0 rgb(0 0 0 / 0.18),
+    inset -1px 0 0 rgb(0 0 0 / 0.18),
+    -1px 0 0 rgb(0 0 0 / 0.18),
+    1px 0 0 rgb(0 0 0 / 0.18);
+  pointer-events: none;
+}
+.seat-view-label {
+  position: absolute;
+  top: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  color: #fff;
+  background: rgb(20 35 38 / 0.55);
+  backdrop-filter: blur(4px);
 }
 
 /* Photos ease in once loaded instead of popping. */

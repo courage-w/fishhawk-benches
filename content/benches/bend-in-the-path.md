@@ -50,6 +50,9 @@ photos:
     height: 1253
     takenAt: 2026-10-25T11:12:45-04:00
     heading: 340
+    seatView:
+      center: 0.398
+      width: 0.267
 ---
 
 Oaks keep this stretch of sidewalk cool, and the woods behind the bench are full of palmettos.

@@ -48,6 +48,9 @@ photos:
     height: 1201
     takenAt: 2026-10-25T11:15:27-04:00
     heading: 308
+    seatView:
+      center: 0.43
+      width: 0.23
 ---
 
 Good shade and a trash can, but the view is the weakest on this walk: utility boxes, the road, and parked cars beyond the trees.
