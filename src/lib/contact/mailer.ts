@@ -54,6 +54,10 @@ export async function sendContactMessage(input: ContactInput): Promise<SendResul
       console.error(`contact: Resend responded ${response.status} (${name})`);
       return { ok: false, reason: "failed" };
     }
+    // Resend's message id lets you find this email in the Resend dashboard (Emails) to check delivery.
+    const sent = (await response.json().catch(() => null)) as { id?: unknown } | null;
+    const id = typeof sent?.id === "string" ? sent.id.replace(/[^\w-]/g, "").slice(0, 64) : "unknown";
+    console.info(`contact: accepted by Resend (id ${id})`);
     return { ok: true };
   } catch (error) {
     console.error(`contact: send failed (${(error as Error).name})`);
