@@ -17,7 +17,8 @@
    npm run locate-views -- --preview
    ```
    If a match is wrong, set `seatView: { center: 0.4, width: 0.25 }` on the panorama by hand.
-6. Preview with `SHOW_DRAFTS=true npm run dev`, set `status: published`, then:
+6. If you renamed anything, refresh the blurred loading previews: `npm run placeholders`.
+7. Preview with `SHOW_DRAFTS=true npm run dev`, set `status: published`, then:
    ```bash
    npm run validate
    npm run check

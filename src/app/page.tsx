@@ -1,21 +1,21 @@
+import Image from "next/image";
 import Link from "next/link";
 import { BenchMap } from "@/components/bench-map";
-import { BenchRow } from "@/components/bench-parts";
+import { BenchRow, blur } from "@/components/bench-parts";
 import { JsonLd } from "@/components/json-ld";
 import { Panorama } from "@/components/panorama";
-import { getBenches, getTrashSpots } from "@/lib/content/load";
+import { getBenches, getTrashSpots, placeholderFor } from "@/lib/content/load";
 import { toMapBenches, toMapTrash } from "@/lib/content/map-data";
-import { photoSrc } from "@/lib/content/parse";
+import { photoSrc, type Bench } from "@/lib/content/parse";
+import { homePicks } from "@/lib/content/picks";
 import { site } from "@/lib/site";
 
 export const ensureStatic = "navigation";
 
-/** The hero panorama: the bench with water in view and the widest sweep. */
-function pickHero(benches: ReturnType<typeof getBenches>) {
+/** The hero panorama: water in view and no road nearby, else any bench with a panorama. */
+function pickHero(benches: Bench[]) {
   const withPano = benches.filter((b) => b.panorama);
-  return (
-    withPano.find((b) => b.features.waterView && !b.features.roadNearby) ?? withPano[0] ?? null
-  );
+  return withPano.find((b) => b.features.waterView && !b.features.roadNearby) ?? withPano[0] ?? null;
 }
 
 const NUMBER_WORDS = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve"];
@@ -23,6 +23,7 @@ const NUMBER_WORDS = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven
 export default function HomePage() {
   const benches = getBenches();
   const hero = pickHero(benches);
+  const picks = homePicks(benches);
   const count = NUMBER_WORDS[benches.length] ?? String(benches.length);
 
   return (
@@ -37,6 +38,14 @@ export default function HomePage() {
         }}
       />
 
+      <section className="frame pt-10 pb-8 sm:pt-16 sm:pb-10">
+        <h1 className="display max-w-3xl text-[2.6rem] sm:text-6xl">Find a nice place to sit for a while.</h1>
+        <p className="lede mt-5">
+          {count} benches around FishHawk Ranch, each photographed from the seat, with honest notes on shade,
+          trash cans, sunsets, and whether you&apos;ll be looking at a pond or a road.
+        </p>
+      </section>
+
       {hero?.panorama && (
         <figure>
           <Panorama
@@ -44,38 +53,63 @@ export default function HomePage() {
             alt={hero.panorama.alt}
             width={hero.panorama.width}
             height={hero.panorama.height}
+            blurDataURL={placeholderFor(hero.slug, hero.panorama.file)}
             seatView={hero.panorama.seatView}
             label={`Panorama from ${hero.title}. Scroll sideways to look around.`}
             eager
           />
-          <figcaption className="frame meta mt-3">
-            From <Link href={`/benches/${hero.slug}`}>{hero.title}</Link>. Swipe or drag sideways to look around.
-            {hero.panorama.seatView && " The two lines frame the view from the seat."}
+          <figcaption className="frame meta mt-2">
+            From <Link href={`/benches/${hero.slug}`}>{hero.title}</Link>. Swipe the photo or tap the strip to look
+            around.
           </figcaption>
         </figure>
       )}
 
       <div className="frame">
-        <section className="pt-12 pb-6 sm:pt-16">
-          <h1 className="display max-w-3xl text-[2.6rem] sm:text-6xl">Find a nice place to sit for a while.</h1>
-          <p className="lede mt-6">
-            {count} benches around FishHawk Ranch so far, each photographed from the seat: the view, the bench
-            itself, and a full panorama. Plus honest notes on shade, trash cans, and whether you&apos;ll be
-            looking at a pond or a road.
-          </p>
-        </section>
+        {picks.length > 0 && (
+          <section aria-labelledby="picks-heading" className="mt-16">
+            <h2 id="picks-heading" className="border-b border-rule pb-3 text-3xl">Start here</h2>
+            <ul className="mt-6 grid gap-10 sm:grid-cols-3 sm:gap-6">
+              {picks.map(({ label, reason, bench }) => {
+                const photo = bench.view ?? bench.photos[0];
+                return (
+                  <li key={bench.slug}>
+                    <Link href={`/benches/${bench.slug}`} className="group block text-ink no-underline">
+                      <span className="photo-frame block aspect-[4/3] overflow-hidden rounded-lg">
+                        <Image
+                          src={photoSrc(bench.slug, photo)}
+                          alt=""
+                          width={photo.width}
+                          height={photo.height}
+                          sizes="(max-width: 640px) 100vw, 360px"
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                          {...blur(bench.slug, photo.file)}
+                        />
+                      </span>
+                      <span className="mt-3 block text-base text-moss">{label}</span>
+                      <span className="block text-2xl leading-tight group-hover:text-pond group-hover:underline">
+                        {bench.title}
+                      </span>
+                      <span className="meta mt-1 block">{reason}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
 
-        <section aria-labelledby="benches-heading" className="mt-10">
+        <section aria-labelledby="benches-heading" className="mt-16">
           <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-rule pb-3">
-            <h2 id="benches-heading" className="text-3xl">The benches</h2>
+            <h2 id="benches-heading" className="text-3xl">All the benches</h2>
             <Link href="/map" className="min-h-11 content-center">
-              See them all on the map
+              See them on the map
             </Link>
           </div>
           {benches.length > 0 ? (
             <div className="divide-y divide-rule">
-              {benches.slice(0, site.benchesPerPage).map((b, i) => (
-                <BenchRow key={b.slug} bench={b} eager={i < 2} />
+              {benches.slice(0, site.benchesPerPage).map((b) => (
+                <BenchRow key={b.slug} bench={b} />
               ))}
             </div>
           ) : (

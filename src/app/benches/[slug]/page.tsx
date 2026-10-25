@@ -3,13 +3,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BenchMap } from "@/components/bench-map";
-import { cap, FactList, formatDate, ProsCons, TagLinks } from "@/components/bench-parts";
+import { blur, cap, FactList, formatDate, ProsCons, TagLinks } from "@/components/bench-parts";
 import { CompassArrow } from "@/components/icons";
 import { JsonLd } from "@/components/json-ld";
 import { headingsOf, Markdown } from "@/components/markdown";
 import { Panorama } from "@/components/panorama";
 import { ShareControls } from "@/components/share-controls";
-import { getBench, getBenches, getTrashSpots, nearestBenches } from "@/lib/content/load";
+import { getBench, getBenches, getTrashSpots, nearestBenches, placeholderFor } from "@/lib/content/load";
 import { toMapBenches, toMapTrash } from "@/lib/content/map-data";
 import { photoSrc } from "@/lib/content/parse";
 import { formatWalkingDistance } from "@/lib/geo";
@@ -113,12 +113,13 @@ export default async function BenchPage({ params }: PageProps<"/benches/[slug]">
             alt={bench.panorama.alt}
             width={bench.panorama.width}
             height={bench.panorama.height}
+            blurDataURL={placeholderFor(bench.slug, bench.panorama.file)}
             seatView={bench.panorama.seatView}
             label="Panorama from the bench. Scroll sideways to look around."
             eager
           />
           <figcaption className="frame meta mt-3">
-            {bench.panorama.caption ?? "The whole scene from the bench. Swipe or drag sideways to look around."}
+            {bench.panorama.caption ?? "The whole scene from the bench. Swipe the photo or tap the strip to look around."}
             {bench.panorama.seatView && " The two lines frame what you see sitting down."}
           </figcaption>
         </figure>
@@ -138,6 +139,7 @@ export default async function BenchPage({ params }: PageProps<"/benches/[slug]">
                   sizes="(max-width: 1024px) 100vw, 720px"
                   loading={bench.panorama ? "lazy" : "eager"}
                   className="h-auto w-full"
+                  {...blur(bench.slug, bench.view.file)}
                 />
               </div>
               <figcaption className="meta mt-3 flex items-center gap-2">
@@ -188,6 +190,7 @@ export default async function BenchPage({ params }: PageProps<"/benches/[slug]">
                           height={p.height}
                           sizes="(max-width: 640px) 100vw, 360px"
                           className="h-full w-full object-cover"
+                          {...blur(bench.slug, p.file)}
                         />
                         <span className="sr-only"> (open full-size photo)</span>
                       </a>
@@ -272,6 +275,7 @@ export default async function BenchPage({ params }: PageProps<"/benches/[slug]">
                         height={photo.height}
                         sizes="(max-width: 640px) 100vw, 360px"
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                        {...blur(b.slug, photo.file)}
                       />
                     </span>
                     <span className="mt-3 block text-xl group-hover:text-pond group-hover:underline">{b.title}</span>

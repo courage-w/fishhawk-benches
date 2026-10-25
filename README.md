@@ -13,7 +13,9 @@ cons, sunrise/sunset times, and a map with every bench and trash can.
 
 ## Features
 
-- View-from-the-seat photo, framed inside a swipeable panorama (found by image matching)
+- View-from-the-seat photo, framed inside a swipeable panorama (found by image matching), with an
+  overview strip to jump around on phones
+- "Start here" picks (best view, most shade, sunsets) chosen by rules from the data
 - Pros and cons generated from the same rules for every bench
 - Sunrise/sunset notes from the photo's compass heading and the sun's path through the year
 - Map of benches and trash cans (Leaflet + OpenStreetMap)

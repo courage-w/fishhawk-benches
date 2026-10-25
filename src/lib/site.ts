@@ -1,7 +1,10 @@
 // Site-wide settings. Only non-secret values belong here; this file can reach client bundles.
 
 function siteUrl(): string {
-  const raw = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  // Explicit setting first; then Vercel's own production domain (a system variable present on
+  // every Vercel build, previews included, so canonical URLs always point at production).
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  const raw = process.env.NEXT_PUBLIC_SITE_URL || (vercel ? `https://${vercel}` : "http://localhost:3000");
   // Canonical URLs, the sitemap and RSS all hang off this, so fail loudly on a bad value.
   const url = new URL(raw);
   if (url.protocol !== "https:" && url.hostname !== "localhost" && url.hostname !== "127.0.0.1") {

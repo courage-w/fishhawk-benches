@@ -19,6 +19,7 @@ import sharp from "sharp";
 import { stringify } from "yaml";
 import { centroid, distanceMeters } from "../src/lib/geo.ts";
 import { clusterPhotos, exifDateToIso, isPanoramaSize, type PhotoPoint } from "../src/lib/cluster.ts";
+import { buildPlaceholders } from "./placeholders.ts";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const BENCH_DIR = path.join(ROOT, "content", "benches");
@@ -253,8 +254,10 @@ async function main() {
   if (args.trash) await ingestTrash(photos, args["dry-run"]!);
   else await ingestBenches(photos, args["dry-run"]!);
   if (!args["dry-run"]) {
+    if (!args.trash) await buildPlaceholders();
     console.log(
-      "\nNext: open the new draft(s), fill in the TODOs, set status: published, then run `npm run validate`.",
+      "\nNext: open the new draft(s), fill in the TODOs, set status: published, then run `npm run validate`." +
+        "\nIf you rename a draft, run `npm run placeholders` again.",
     );
   }
 }

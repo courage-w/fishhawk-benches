@@ -2,6 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { CompassArrow, DashIcon, LeafIcon } from "./icons";
+import { placeholderFor } from "@/lib/content/load";
 import { photoSrc, type Bench } from "@/lib/content/parse";
 import { SHADE_LABEL, TAGS } from "@/lib/content/traits";
 import { sunSummary } from "@/lib/sun";
@@ -38,6 +39,7 @@ export function BenchRow({ bench, headingLevel = 3, eager = false }: { bench: Be
           height={photo.height}
           sizes="(max-width: 640px) 100vw, 320px"
           loading={eager ? "eager" : "lazy"}
+          {...blur(bench.slug, photo.file)}
           className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
         />
       </Link>
@@ -139,6 +141,12 @@ export function TagLinks({ bench }: { bench: Bench }) {
 }
 
 export const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/** next/image props for a blurred loading preview, when one exists. */
+export function blur(slug: string, file: string) {
+  const blurDataURL = placeholderFor(slug, file);
+  return blurDataURL ? ({ placeholder: "blur", blurDataURL } as const) : {};
+}
 
 export function formatDate(iso: string): string {
   // Content dates are plain YYYY-MM-DD; format them without timezone drift.

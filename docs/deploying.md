@@ -9,7 +9,7 @@ Set these in Vercel → Settings → Environment Variables (never in a committed
 
 | Name | Needed for | Notes |
 |---|---|---|
-| `NEXT_PUBLIC_SITE_URL` | Production | The https origin, e.g. `https://fishhawk-benches.vercel.app`. Used for canonical URLs, sitemap, RSS. |
+| `NEXT_PUBLIC_SITE_URL` | Optional | The https origin. On Vercel it defaults to the project's production domain (`VERCEL_PROJECT_PRODUCTION_URL`), so you only need it elsewhere. |
 | `RESEND_API_KEY` | Contact form | Secret. Sending-only key from resend.com. |
 | `CONTACT_TO_EMAIL` | Contact form | Inbox for messages. Without a verified domain, must be the Resend account's email. |
 | `CONTACT_FROM_EMAIL` | Contact form | `FishHawk Benches <onboarding@resend.dev>` until a domain is verified in Resend. |

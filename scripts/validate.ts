@@ -5,7 +5,7 @@
  */
 import path from "node:path";
 import sharp from "sharp";
-import { loadContent } from "../src/lib/content/load.ts";
+import { loadContent, placeholderFor } from "../src/lib/content/load.ts";
 import { distanceMeters } from "../src/lib/geo.ts";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
@@ -22,6 +22,8 @@ for (const bench of benches) {
   if (/!\[|<[a-z]/i.test(bench.body)) errors.push(`${where}: body must not contain images or HTML; use the photos list`);
 
   for (const photo of bench.photos) {
+    if (!placeholderFor(bench.slug, photo.file))
+      warnings.push(`${where}: ${photo.file} has no loading preview (run \`npm run placeholders\`)`);
     const file = path.join(ROOT, "public", "photos", bench.slug, photo.file);
     try {
       const meta = await sharp(file).metadata();

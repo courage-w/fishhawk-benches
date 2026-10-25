@@ -90,6 +90,28 @@ export function getTrashSpots(): TrashSpot[] {
   return content().trash;
 }
 
+let placeholders: Record<string, string> | null = null;
+
+/** Tiny blurred preview for a photo (from `npm run placeholders`), or undefined if missing. */
+export function placeholderFor(slug: string, file: string): string | undefined {
+  if (!placeholders || process.env.NODE_ENV !== "production") {
+    const jsonPath = path.join(ROOT, "content", "placeholders.json");
+    try {
+      const parsed: unknown = JSON.parse(readFileSync(jsonPath, "utf8").replace(/^﻿/, ""));
+      placeholders = {};
+      if (parsed && typeof parsed === "object") {
+        for (const [k, v] of Object.entries(parsed)) {
+          // Only accept tiny inline images; anything else is ignored rather than rendered.
+          if (typeof v === "string" && /^data:image\/webp;base64,[A-Za-z0-9+/=]{1,4000}$/.test(v)) placeholders[k] = v;
+        }
+      }
+    } catch {
+      placeholders = {};
+    }
+  }
+  return placeholders[`${slug}/${file}`];
+}
+
 export type Neighbor = { bench: Bench; meters: number; direction: CompassPoint };
 
 /** Closest other benches, with the direction to walk from this one. */
