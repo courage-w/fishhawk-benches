@@ -3,8 +3,33 @@
 A calm little field guide to the benches of FishHawk Ranch: the view from each seat, a
 panorama you can scroll around, honest pros and cons, and a map with every bench and trash can.
 
-Built with Next.js 16 (App Router, fully prerendered), TypeScript, Tailwind CSS 4, Leaflet +
-OpenStreetMap, and Markdown content files. No database, no cookies, no analytics.
+![Home page: a panorama of a pond with two lines framing the view from the bench](docs/screenshots/home.jpg)
+
+## What it does
+
+- **The view from every seat.** Each bench has the photo you'd see sitting down, photos of the
+  bench itself, and a panorama you can swipe around. Two lines in the panorama frame the seat's view.
+  The site finds that spot automatically by matching the photos.
+- **Honest pros and cons**, from the same rules for every bench: water view, shade, a trash can
+  nearby, road noise.
+- **Sunrise and sunset notes**, worked out from the phone's compass heading and the sun's path
+  through the year: "Sets in front of you, April to August".
+- **A map** of every bench plus the trash cans along the way, with layers you can switch on and off.
+- **Adding benches is one command.** Drop phone photos in a folder and the site groups them by bench
+  using their GPS and timestamps. It strips the location data from the web copies and writes a draft
+  page.
+
+| Bench page (dark mode) | On a phone | The map |
+|---|---|---|
+| ![A bench page with a panorama of a roadside path](docs/screenshots/bench.jpg) | ![A bench page on a phone](docs/screenshots/mobile.jpg) | ![The map with bench and trash-can pins](docs/screenshots/map.jpg) |
+
+## Built with
+
+Next.js 16 (App Router, every page prerendered), TypeScript, Tailwind CSS 4, Leaflet with
+OpenStreetMap, zod-validated Markdown content, Vitest and Playwright (including automated
+accessibility checks). No database, cookies, analytics or ads.
+
+Map screenshots © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors.
 
 ---
 
