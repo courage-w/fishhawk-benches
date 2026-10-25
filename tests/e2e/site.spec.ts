@@ -1,0 +1,214 @@
+import AxeBuilder from "@axe-core/playwright";
+import { expect, test, type Page } from "@playwright/test";
+
+const PAGES = ["/", "/benches", "/benches/between-two-ponds", "/benches/corner-oaks", "/benches/tag/shaded", "/map", "/about", "/contact", "/privacy", "/terms"];
+
+// Don't hit OpenStreetMap from tests: answer tile requests with a blank PNG.
+const BLANK_PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+  "base64",
+);
+test.beforeEach(async ({ page }) => {
+  await page.route("https://tile.openstreetmap.org/**", (route) =>
+    route.fulfill({ status: 200, contentType: "image/png", body: BLANK_PNG }),
+  );
+});
+
+function trackErrors(page: Page) {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+  return errors;
+}
+
+test.describe("pages", () => {
+  for (const path of PAGES) {
+    test(`${path} renders, has one h1, a unique title, no errors, no sideways scroll`, async ({ page }) => {
+      const errors = trackErrors(page);
+      const response = await page.goto(path);
+      expect(response?.status()).toBe(200);
+      await expect(page.locator("h1")).toHaveCount(1);
+      await expect(page).toHaveTitle(/FishHawk Benches/);
+      await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /^http/);
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow).toBeLessThanOrEqual(0);
+      expect(errors).toEqual([]);
+    });
+  }
+
+  test("no broken images on the home page", async ({ page }) => {
+    await page.goto("/");
+    // Scroll everything into view so lazy images load.
+    for (const img of await page.locator("main img").all()) await img.scrollIntoViewIfNeeded();
+    await page.waitForLoadState("networkidle");
+    const broken = await page.locator("main img").evaluateAll((imgs) =>
+      (imgs as HTMLImageElement[]).filter((i) => i.complete && i.naturalWidth === 0).map((i) => i.src),
+    );
+    expect(broken).toEqual([]);
+  });
+});
+
+test.describe("accessibility (axe, WCAG 2.2 AA rules)", () => {
+  for (const path of PAGES) {
+    test(path, async ({ page }) => {
+      await page.goto(path);
+      await page.waitForLoadState("networkidle");
+      const results = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        // Leaflet's tiles and markers are third-party DOM; the same content is listed as text on every map page.
+        .exclude(".leaflet-container")
+        .analyze();
+      expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
+    });
+  }
+
+  test("skip link moves focus to the main content", async ({ page, browserName }, info) => {
+    test.skip(info.project.name === "mobile", "keyboard test");
+    void browserName;
+    await page.goto("/about");
+    await page.keyboard.press("Tab");
+    await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/#main$/);
+  });
+});
+
+test.describe("bench pages", () => {
+  test("show the view, pros and cons, facts, map and nearby benches", async ({ page }) => {
+    await page.goto("/benches/between-two-ponds");
+    await expect(page.getByRole("heading", { name: "Between Two Ponds", level: 1 })).toBeVisible();
+    await expect(page.getByRole("region", { name: /Panorama from the bench/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Pros" })).toBeVisible();
+    await expect(page.getByText("Looks out over the water")).toBeVisible();
+    await expect(page.getByText("No shade, so it gets hot at midday")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Nearby benches" })).toBeVisible();
+    await expect(page.locator(".bench-map .pin-bench").first()).toBeVisible();
+  });
+
+  test("have accurate metadata and structured data", async ({ page }) => {
+    await page.goto("/benches/oak-shade-roadside");
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/benches\/oak-shade-roadside$/);
+    await expect(page.locator('meta[property="og:type"]')).toHaveAttribute("content", "article");
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /\/photos\/oak-shade-roadside\//);
+    const ld = await page.locator('script[type="application/ld+json"]').allTextContents();
+    const article = ld.map((s) => JSON.parse(s)).find((d) => d["@type"] === "Article");
+    expect(article.headline).toBe("Oak Shade by the Road");
+    expect(article.datePublished).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(article.contentLocation.geo.latitude).toBeCloseTo(27.85, 1);
+  });
+
+  test("copy link reports success", async ({ page, context }, info) => {
+    test.skip(info.project.name === "mobile", "clipboard permission is desktop-only in Chromium");
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto("/benches/palmetto-path");
+    await page.getByRole("button", { name: "Copy link" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Link copied." })).toBeVisible();
+  });
+
+  test("unknown benches and pages return a real 404", async ({ page }) => {
+    for (const path of ["/benches/not-a-real-bench", "/benches/page/99", "/benches/tag/made-up", "/nope"]) {
+      const response = await page.goto(path);
+      expect(response?.status(), path).toBe(404);
+      await expect(page.getByRole("heading", { name: "This bench is empty." })).toBeVisible();
+      await expect(page.locator('meta[name="robots"]').first()).toHaveAttribute("content", /noindex/);
+    }
+  });
+
+  test("page 1 of the archive redirects to /benches", async ({ page }) => {
+    await page.goto("/benches/page/1");
+    await expect(page).toHaveURL(/\/benches$/);
+  });
+});
+
+test.describe("navigation", () => {
+  test("header links reach each section and mark the current page", async ({ page }, info) => {
+    test.skip(info.project.name === "mobile", "same markup on mobile");
+    await page.goto("/");
+    const nav = page.getByRole("navigation", { name: "Main" });
+    for (const [name, url] of [["Benches", /\/benches$/], ["Map", /\/map$/], ["About", /\/about$/], ["Say hello", /\/contact$/]] as const) {
+      await nav.getByRole("link", { name }).click();
+      await expect(page).toHaveURL(url);
+      await expect(nav.getByRole("link", { name })).toHaveAttribute("aria-current", "page");
+    }
+  });
+
+  test("map toggles hide and show trash cans", async ({ page }) => {
+    await page.goto("/map");
+    const trashPins = page.locator(".leaflet-container .pin-trash");
+    await expect(trashPins.first()).toBeAttached();
+    await page.getByRole("checkbox", { name: /Trash cans/ }).uncheck();
+    await expect(trashPins).toHaveCount(0);
+    await page.getByRole("checkbox", { name: /Trash cans/ }).check();
+    await expect(trashPins.first()).toBeAttached();
+  });
+});
+
+test.describe("feeds and crawling", () => {
+  test("RSS is valid XML listing benches", async ({ request }) => {
+    const res = await request.get("/feed.xml");
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("application/rss+xml");
+    const xml = await res.text();
+    expect(xml).toMatch(/^<\?xml/);
+    expect(xml).toContain("<title>Between Two Ponds</title>");
+    expect((xml.match(/<item>/g) ?? []).length).toBeGreaterThanOrEqual(9);
+  });
+
+  test("sitemap lists every bench and robots points to it", async ({ request }) => {
+    const sitemap = await (await request.get("/sitemap.xml")).text();
+    for (const slug of ["between-two-ponds", "open-lawn-pond", "boardwalk-pond"]) expect(sitemap).toContain(`/benches/${slug}`);
+    const robots = await (await request.get("/robots.txt")).text();
+    expect(robots).toMatch(/Sitemap: http.*\/sitemap\.xml/);
+  });
+});
+
+test.describe("security", () => {
+  test("responses carry security headers", async ({ request }) => {
+    const res = await request.get("/");
+    const h = res.headers();
+    expect(h["content-security-policy"]).toContain("frame-ancestors 'none'");
+    expect(h["content-security-policy"]).toContain("object-src 'none'");
+    expect(h["strict-transport-security"]).toContain("max-age=");
+    expect(h["x-content-type-options"]).toBe("nosniff");
+    expect(h["referrer-policy"]).toBe("strict-origin-when-cross-origin");
+    expect(h["x-powered-by"]).toBeUndefined();
+  });
+
+  test("published photos carry no EXIF/GPS metadata", async ({ request }) => {
+    const res = await request.get("/photos/between-two-ponds/img_2474.jpg");
+    expect(res.status()).toBe(200);
+    const bytes = await res.body();
+    // JPEG APP1 "Exif" segment marker.
+    expect(bytes.includes(Buffer.from("Exif\0\0"))).toBe(false);
+  });
+
+  test("path traversal in slugs is rejected", async ({ request }) => {
+    const res = await request.get("/benches/..%2F..%2Fpackage.json");
+    expect(res.status()).toBe(404);
+  });
+});
+
+test.describe("contact form", () => {
+  test("shows field errors, then sends", async ({ page }) => {
+    await page.goto("/contact");
+    await page.waitForTimeout(3200); // the form ignores submissions made faster than a person could type
+    await page.getByRole("button", { name: "Send message" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: /./ })).toContainText("Please fix the highlighted fields.");
+    await expect(page.getByLabel("Your email")).toHaveAttribute("aria-invalid", "true");
+
+    await page.getByLabel("Your email").fill("visitor@example.com");
+    await page.getByLabel("Message").fill("There's a bench by the dog park worth adding.");
+    await page.getByRole("button", { name: "Send message" }).click();
+    await expect(page.getByRole("status")).toContainText("Thanks! Your message is on its way.");
+  });
+
+  test("keeps what you typed when there's an error", async ({ page }) => {
+    await page.goto("/contact");
+    await page.waitForTimeout(3200);
+    await page.getByLabel("Your email").fill("not-an-email");
+    await page.getByLabel("Message").fill("Keep this text please.");
+    await page.getByRole("button", { name: "Send message" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: /./ })).toBeVisible();
+    await expect(page.getByLabel("Message")).toHaveValue("Keep this text please.");
+  });
+});
