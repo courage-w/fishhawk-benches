@@ -48,7 +48,10 @@ export async function sendContactMessage(input: ContactInput): Promise<SendResul
       signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) {
-      console.error(`contact: Resend responded ${response.status}`);
+      // Resend's error `name` (e.g. validation_error) says what's wrong without logging addresses.
+      const detail = (await response.json().catch(() => null)) as { name?: unknown } | null;
+      const name = typeof detail?.name === "string" ? detail.name.replace(/[^\w-]/g, "").slice(0, 60) : "unknown";
+      console.error(`contact: Resend responded ${response.status} (${name})`);
       return { ok: false, reason: "failed" };
     }
     return { ok: true };
