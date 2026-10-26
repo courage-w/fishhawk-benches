@@ -286,14 +286,17 @@ body {
   border-inline: 1.5px solid rgb(255 255 255 / 0.9);
   pointer-events: none;
 }
+/* Positioned with transform from the scroll handler; no transition, so it never lags the photo. */
 .pano-overview-window {
   position: absolute;
   inset-block: 0;
+  left: 0;
+  width: 100%;
+  will-change: transform;
   border: 2px solid #fff;
   border-radius: 0.375rem;
   box-shadow: 0 0 0 999px rgb(0 0 0 / 0.35);
   pointer-events: none;
-  transition: left 80ms linear;
 }
 
 /* Two quiet lines framing what you see sitting on the bench. */

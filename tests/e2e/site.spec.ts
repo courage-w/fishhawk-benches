@@ -127,6 +127,33 @@ test.describe("bench pages", () => {
     await expect(back).toBeHidden();
   });
 
+  test("the mini-map's white box tracks the photo on every frame", async ({ page }, info) => {
+    if (info.project.name === "desktop") await page.setViewportSize({ width: 900, height: 800 });
+    await page.goto("/benches/bend-in-the-path");
+    await expect(page.locator(".pano-inset")).toHaveAttribute("data-visible", "true");
+    const worst = await page.evaluate(async () => {
+      const strip = document.querySelector<HTMLElement>(".panorama")!;
+      const box = document.querySelector<HTMLElement>(".pano-overview-window")!;
+      const map = box.parentElement!;
+      let max = 0;
+      let run = true;
+      const tick = () => {
+        const expected = (strip.scrollLeft / strip.scrollWidth) * map.clientWidth;
+        const drawn = box.getBoundingClientRect().left - map.getBoundingClientRect().left;
+        max = Math.max(max, Math.abs(drawn - expected));
+        if (run) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+      for (const left of [0, strip.scrollWidth, strip.scrollWidth / 3]) {
+        strip.scrollTo({ left, behavior: "smooth" });
+        await new Promise((r) => setTimeout(r, 600));
+      }
+      run = false;
+      return max;
+    });
+    expect(worst).toBeLessThan(1);
+  });
+
   test("a vertical swipe starting on the mini-map scrolls the page, not the panorama", async ({ page, context }, info) => {
     test.skip(info.project.name !== "mobile", "touch gesture");
     await page.goto("/benches/bend-in-the-path");

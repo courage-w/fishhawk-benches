@@ -29,26 +29,32 @@ const reducedMotion = () =>
  */
 export function Panorama({ src, alt, width, height, blurDataURL, seatView, eager, label }: Props) {
   const strip = useRef<HTMLDivElement>(null);
-  const [view, setView] = useState({ left: 0, width: 1 });
+  /** The white "you are here" box on the mini-map. Moved directly, never through React state. */
+  const viewBox = useRef<HTMLSpanElement>(null);
+  // Fraction of the panorama on screen; only changes on resize, so it rarely re-renders.
+  const [visibleFraction, setVisibleFraction] = useState(1);
   // Whether you've panned away from the seat view (drives the "Seat view" button).
   const [awayFromSeat, setAwayFromSeat] = useState(false);
   const focus = seatView?.center ?? 0.5;
 
-  // Track which part of the panorama is on screen, at most once per animation frame.
-  const frame = useRef(0);
+  // Runs inside every scroll event (the browser already fires those once per frame), so the
+  // white box moves in the same frame as the photo, on the GPU via transform, with no easing.
   const syncView = useCallback(() => {
-    cancelAnimationFrame(frame.current);
-    frame.current = requestAnimationFrame(() => {
-      const el = strip.current;
-      if (!el || el.scrollWidth === 0) return;
-      const left = el.scrollLeft / el.scrollWidth;
-      const visible = el.clientWidth / el.scrollWidth;
-      setView({ left, width: visible });
-      // Hysteresis: show the button once the seat view's middle is well off-center, hide it only
-      // when it's back near the middle, so it never flickers while you swipe across the edge.
-      const offset = Math.abs(focus - (left + visible / 2)) / visible;
-      setAwayFromSeat((away) => (away ? offset > 0.2 : offset > 0.4));
-    });
+    const el = strip.current;
+    if (!el || el.scrollWidth === 0) return;
+    const left = el.scrollLeft / el.scrollWidth;
+    const visible = el.clientWidth / el.scrollWidth;
+    const box = viewBox.current;
+    const map = box?.parentElement;
+    if (box && map) {
+      box.style.width = `${Math.min(1, visible) * 100}%`;
+      box.style.transform = `translate3d(${left * map.clientWidth}px, 0, 0)`;
+    }
+    setVisibleFraction((v) => (Math.abs(v - visible) > 0.001 ? visible : v));
+    // Hysteresis: show the button once the seat view's middle is well off-center, hide it only
+    // when it's back near the middle, so it never flickers while you swipe across the edge.
+    const offset = Math.abs(focus - (left + visible / 2)) / visible;
+    setAwayFromSeat((away) => (away ? offset > 0.2 : offset > 0.4));
   }, [focus]);
 
   /** Scroll so `fraction` of the panorama sits in the middle of the screen. */
@@ -88,13 +94,14 @@ export function Panorama({ src, alt, width, height, blurDataURL, seatView, eager
     };
     const resize = new ResizeObserver(syncView);
     resize.observe(el);
+    // The mini-map changes size when it appears or the window resizes; keep the box in step.
+    if (viewBox.current?.parentElement) resize.observe(viewBox.current.parentElement);
     el.addEventListener("scroll", syncView, { passive: true });
     el.addEventListener("pointerdown", down);
     el.addEventListener("pointermove", move);
     el.addEventListener("pointerup", up);
     el.addEventListener("pointercancel", up);
     return () => {
-      cancelAnimationFrame(frame.current);
       resize.disconnect();
       el.removeEventListener("scroll", syncView);
       el.removeEventListener("pointerdown", down);
@@ -141,7 +148,7 @@ export function Panorama({ src, alt, width, height, blurDataURL, seatView, eager
 
   // The mini-map only earns its space when most of the scene is off-screen (phones, laptops);
   // on wide monitors nearly the whole panorama already fits, so it stays hidden.
-  const showInset = view.width < 0.7;
+  const showInset = visibleFraction < 0.7;
 
   return (
     <div className="relative">
@@ -191,8 +198,8 @@ export function Panorama({ src, alt, width, height, blurDataURL, seatView, eager
             />
           )}
           <span
+            ref={viewBox}
             className="pano-overview-window"
-            style={{ left: `${view.left * 100}%`, width: `${Math.min(1, view.width) * 100}%` }}
           />
         </div>
         {seatView && (
