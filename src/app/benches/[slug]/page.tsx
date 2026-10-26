@@ -119,7 +119,7 @@ export default async function BenchPage({ params }: PageProps<"/benches/[slug]">
             eager
           />
           <figcaption className="frame meta mt-3">
-            {bench.panorama.caption ?? "The whole scene from the bench. Swipe the photo or tap the strip to look around."}
+            {bench.panorama.caption ?? "The whole scene from the bench. Swipe or drag the photo to look around."}
             {bench.panorama.seatView && " The two lines frame what you see sitting down."}
           </figcaption>
         </figure>

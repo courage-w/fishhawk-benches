@@ -108,8 +108,12 @@ export function Panorama({ src, alt, width, height, blurDataURL, seatView, eager
     seatView.center >= view.left + view.width * 0.2 &&
     seatView.center <= view.left + view.width * 0.8;
 
+  // The mini-map only earns its space when most of the scene is off-screen (phones, laptops);
+  // on wide monitors nearly the whole panorama already fits, so it stays hidden.
+  const showInset = view.width < 0.7;
+
   return (
-    <div>
+    <div className="relative">
       <div ref={strip} className="panorama photo-frame" tabIndex={0} role="region" aria-label={label}>
         <div className="pano-track" style={{ "--pano-aspect": aspect } as CSSProperties}>
           <Image
@@ -138,7 +142,7 @@ export function Panorama({ src, alt, width, height, blurDataURL, seatView, eager
         </div>
       </div>
 
-      <div className="frame mt-3 flex items-center gap-3">
+      <div className="pano-inset" data-visible={showInset} inert={!showInset}>
         <div
           className="pano-overview"
           style={{ "--pano-aspect": aspect } as CSSProperties}
@@ -163,14 +167,9 @@ export function Panorama({ src, alt, width, height, blurDataURL, seatView, eager
             style={{ left: `${view.left * 100}%`, width: `${Math.min(1, view.width) * 100}%` }}
           />
         </div>
-        {seatView && (
-          <button
-            type="button"
-            onClick={() => centerOn(seatView.center, true)}
-            // `invisible` keeps the layout steady and removes it from the accessibility tree.
-            className={`min-h-11 shrink-0 cursor-pointer rounded-full border border-rule px-4 text-base text-ink hover:border-pond hover:text-pond ${seatInView ? "invisible" : ""}`}
-          >
-            Back to the seat view
+        {seatView && !seatInView && (
+          <button type="button" onClick={() => centerOn(seatView.center, true)} className="pano-inset-button">
+            Seat view
           </button>
         )}
       </div>

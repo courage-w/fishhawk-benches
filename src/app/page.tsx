@@ -59,8 +59,7 @@ export default function HomePage() {
             eager
           />
           <figcaption className="frame meta mt-2">
-            From <Link href={`/benches/${hero.slug}`}>{hero.title}</Link>. Swipe the photo or tap the strip to look
-            around.
+            From <Link href={`/benches/${hero.slug}`}>{hero.title}</Link>. Swipe or drag the photo to look around.
           </figcaption>
         </figure>
       )}

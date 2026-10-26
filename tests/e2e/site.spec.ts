@@ -94,6 +94,8 @@ test.describe("bench pages", () => {
     await expect(img).toBeVisible();
     const [stripBox, imgBox] = [await strip.boundingBox(), await img.boundingBox()];
     expect(imgBox!.width).toBeGreaterThanOrEqual(stripBox!.width - 1);
+    // Nearly the whole scene fits, so the mini-map stays out of the way.
+    await expect(page.locator(".pano-inset")).toHaveAttribute("data-visible", "false");
 
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.reload();
@@ -105,6 +107,24 @@ test.describe("bench pages", () => {
     const middle = linesBox.x + linesBox.width / 2;
     expect(middle).toBeGreaterThan(box.x);
     expect(middle).toBeLessThan(box.x + box.width);
+  });
+
+  test("mini-map shows when the scene is off-screen and jumps around", async ({ page }, info) => {
+    // On a 1280x720 desktop ~80% of this panorama fits, so the mini-map rightly stays hidden;
+    // test at a width where most of the scene is off-screen.
+    if (info.project.name === "desktop") await page.setViewportSize({ width: 900, height: 800 });
+    await page.goto("/benches/bend-in-the-path");
+    const inset = page.locator(".pano-inset");
+    await expect(inset).toHaveAttribute("data-visible", "true");
+    const strip = page.getByRole("region", { name: /Panorama from the bench/ });
+    const before = await strip.evaluate((el) => el.scrollLeft);
+    const map = (await page.locator(".pano-overview").boundingBox())!;
+    await page.mouse.click(map.x + map.width * 0.97, map.y + map.height / 2);
+    await expect.poll(() => strip.evaluate((el) => el.scrollLeft)).toBeGreaterThan(before);
+    const back = page.getByRole("button", { name: "Seat view" });
+    await expect(back).toBeVisible();
+    await back.click();
+    await expect(back).toBeHidden();
   });
 
   test("have accurate metadata and structured data", async ({ page }) => {
