@@ -127,6 +127,32 @@ test.describe("bench pages", () => {
     await expect(back).toBeHidden();
   });
 
+  test("a vertical swipe starting on the mini-map scrolls the page, not the panorama", async ({ page, context }, info) => {
+    test.skip(info.project.name !== "mobile", "touch gesture");
+    await page.goto("/benches/bend-in-the-path");
+    const map = page.locator(".pano-overview");
+    await map.scrollIntoViewIfNeeded();
+    await page.evaluate(() => window.scrollBy(0, -250));
+    const strip = page.getByRole("region", { name: /Panorama from the bench/ });
+    const before = { y: await page.evaluate(() => scrollY), x: await strip.evaluate((el) => el.scrollLeft) };
+    const widthBefore = (await map.boundingBox())!.width;
+
+    const cdp = await context.newCDPSession(page);
+    const box = (await map.boundingBox())!;
+    const x = box.x + box.width * 0.85;
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y: box.y + box.height / 2 }] });
+    for (let i = 1; i <= 12; i++) {
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y: box.y + box.height / 2 - i * 20 }] });
+    }
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await page.waitForTimeout(500);
+
+    expect(await page.evaluate(() => scrollY)).toBeGreaterThan(before.y);
+    expect(await strip.evaluate((el) => el.scrollLeft)).toBe(before.x);
+    // The "Seat view" button keeps its space, so the mini-map never changes width.
+    expect((await map.boundingBox())!.width).toBeCloseTo(widthBefore, 0);
+  });
+
   test("have accurate metadata and structured data", async ({ page }) => {
     await page.goto("/benches/oak-shade-roadside");
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/benches\/oak-shade-roadside$/);

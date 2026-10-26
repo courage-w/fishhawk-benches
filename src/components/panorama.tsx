@@ -30,6 +30,8 @@ const reducedMotion = () =>
 export function Panorama({ src, alt, width, height, blurDataURL, seatView, eager, label }: Props) {
   const strip = useRef<HTMLDivElement>(null);
   const [view, setView] = useState({ left: 0, width: 1 });
+  // Whether you've panned away from the seat view (drives the "Seat view" button).
+  const [awayFromSeat, setAwayFromSeat] = useState(false);
   const focus = seatView?.center ?? 0.5;
 
   // Track which part of the panorama is on screen, at most once per animation frame.
@@ -39,9 +41,15 @@ export function Panorama({ src, alt, width, height, blurDataURL, seatView, eager
     frame.current = requestAnimationFrame(() => {
       const el = strip.current;
       if (!el || el.scrollWidth === 0) return;
-      setView({ left: el.scrollLeft / el.scrollWidth, width: el.clientWidth / el.scrollWidth });
+      const left = el.scrollLeft / el.scrollWidth;
+      const visible = el.clientWidth / el.scrollWidth;
+      setView({ left, width: visible });
+      // Hysteresis: show the button once the seat view's middle is well off-center, hide it only
+      // when it's back near the middle, so it never flickers while you swipe across the edge.
+      const offset = Math.abs(focus - (left + visible / 2)) / visible;
+      setAwayFromSeat((away) => (away ? offset > 0.2 : offset > 0.4));
     });
-  }, []);
+  }, [focus]);
 
   /** Scroll so `fraction` of the panorama sits in the middle of the screen. */
   const centerOn = useCallback((fraction: number, smooth: boolean) => {
@@ -96,17 +104,40 @@ export function Panorama({ src, alt, width, height, blurDataURL, seatView, eager
     };
   }, [focus, centerOn, syncView]);
 
-  // Overview bar: tap or drag anywhere to look at that part of the scene.
-  const scrub = (e: ReactPointerEvent<HTMLDivElement>, smooth: boolean) => {
-    const box = e.currentTarget.getBoundingClientRect();
-    centerOn(Math.min(1, Math.max(0, (e.clientX - box.left) / box.width)), smooth);
+  // Mini-map gestures. A tap jumps there; a sideways drag scrubs. A mostly-vertical swipe is left
+  // to the browser so the page scrolls normally even when your thumb starts on the mini-map.
+  const gesture = useRef<{ id: number; x: number; y: number; mode: "pending" | "drag" | "scroll" } | null>(null);
+  const scrubTo = (el: HTMLElement, clientX: number, smooth: boolean) => {
+    const box = el.getBoundingClientRect();
+    centerOn(Math.min(1, Math.max(0, (clientX - box.left) / box.width)), smooth);
+  };
+  const onDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    gesture.current = { id: e.pointerId, x: e.clientX, y: e.clientY, mode: "pending" };
+  };
+  const onMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const g = gesture.current;
+    if (!g || g.id !== e.pointerId || g.mode === "scroll") return;
+    if (g.mode === "pending") {
+      const dx = Math.abs(e.clientX - g.x);
+      const dy = Math.abs(e.clientY - g.y);
+      if (dx < 6 && dy < 6) return;
+      if (dy >= dx) {
+        g.mode = "scroll";
+        return;
+      }
+      g.mode = "drag";
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+    scrubTo(e.currentTarget, e.clientX, false);
+  };
+  const onUp = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const g = gesture.current;
+    if (g && g.id === e.pointerId && g.mode === "pending") scrubTo(e.currentTarget, e.clientX, true);
+    gesture.current = null;
   };
 
   const aspect = width / height;
-  const seatInView =
-    seatView !== undefined &&
-    seatView.center >= view.left + view.width * 0.2 &&
-    seatView.center <= view.left + view.width * 0.8;
 
   // The mini-map only earns its space when most of the scene is off-screen (phones, laptops);
   // on wide monitors nearly the whole panorama already fits, so it stays hidden.
@@ -147,13 +178,10 @@ export function Panorama({ src, alt, width, height, blurDataURL, seatView, eager
           className="pano-overview"
           style={{ "--pano-aspect": aspect } as CSSProperties}
           aria-hidden="true"
-          onPointerDown={(e) => {
-            e.currentTarget.setPointerCapture(e.pointerId);
-            scrub(e, true);
-          }}
-          onPointerMove={(e) => {
-            if (e.buttons === 1 || e.pointerType === "touch") scrub(e, false);
-          }}
+          onPointerDown={onDown}
+          onPointerMove={onMove}
+          onPointerUp={onUp}
+          onPointerCancel={() => (gesture.current = null)}
         >
           <Image src={src} alt="" width={width} height={height} sizes="448px" draggable={false} />
           {seatView && (
@@ -167,8 +195,16 @@ export function Panorama({ src, alt, width, height, blurDataURL, seatView, eager
             style={{ left: `${view.left * 100}%`, width: `${Math.min(1, view.width) * 100}%` }}
           />
         </div>
-        {seatView && !seatInView && (
-          <button type="button" onClick={() => centerOn(seatView.center, true)} className="pano-inset-button">
+        {seatView && (
+          // Always rendered so the mini-map never changes width; it fades in once you've panned away.
+          <button
+            type="button"
+            onClick={() => centerOn(seatView.center, true)}
+            className="pano-inset-button"
+            data-visible={awayFromSeat}
+            tabIndex={awayFromSeat ? undefined : -1}
+            aria-hidden={awayFromSeat ? undefined : true}
+          >
             Seat view
           </button>
         )}

@@ -249,7 +249,8 @@ body {
   border-radius: 0.5rem;
   overflow: hidden;
   cursor: pointer;
-  touch-action: none;
+  /* Vertical swipes scroll the page; sideways drags and taps are handled by the mini-map. */
+  touch-action: pan-y;
 }
 .pano-overview img {
   width: 100%;
@@ -268,7 +269,13 @@ body {
   color: #fff;
   background: rgb(255 255 255 / 0.16);
   cursor: pointer;
-  transition: background 160ms ease;
+  opacity: 0;
+  pointer-events: none;
+  transition: background 160ms ease, opacity 200ms ease;
+}
+.pano-inset-button[data-visible="true"] {
+  opacity: 1;
+  pointer-events: auto;
 }
 .pano-inset-button:hover {
   background: rgb(255 255 255 / 0.28);
