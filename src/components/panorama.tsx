@@ -33,8 +33,6 @@ export function Panorama({ src, alt, width, height, blurDataURL, seatView, eager
   const viewBox = useRef<HTMLSpanElement>(null);
   // Fraction of the panorama on screen; only changes on resize, so it rarely re-renders.
   const [visibleFraction, setVisibleFraction] = useState(1);
-  // Whether you've panned away from the seat view (drives the "Seat view" button).
-  const [awayFromSeat, setAwayFromSeat] = useState(false);
   const focus = seatView?.center ?? 0.5;
 
   // Runs inside every scroll event (the browser already fires those once per frame), so the
@@ -51,11 +49,7 @@ export function Panorama({ src, alt, width, height, blurDataURL, seatView, eager
       box.style.transform = `translate3d(${left * map.clientWidth}px, 0, 0)`;
     }
     setVisibleFraction((v) => (Math.abs(v - visible) > 0.001 ? visible : v));
-    // Hysteresis: show the button once the seat view's middle is well off-center, hide it only
-    // when it's back near the middle, so it never flickers while you swipe across the edge.
-    const offset = Math.abs(focus - (left + visible / 2)) / visible;
-    setAwayFromSeat((away) => (away ? offset > 0.2 : offset > 0.4));
-  }, [focus]);
+  }, []);
 
   /** Scroll so `fraction` of the panorama sits in the middle of the screen. */
   const centerOn = useCallback((fraction: number, smooth: boolean) => {
@@ -202,19 +196,6 @@ export function Panorama({ src, alt, width, height, blurDataURL, seatView, eager
             className="pano-overview-window"
           />
         </div>
-        {seatView && (
-          // Always rendered so the mini-map never changes width; it fades in once you've panned away.
-          <button
-            type="button"
-            onClick={() => centerOn(seatView.center, true)}
-            className="pano-inset-button"
-            data-visible={awayFromSeat}
-            tabIndex={awayFromSeat ? undefined : -1}
-            aria-hidden={awayFromSeat ? undefined : true}
-          >
-            Seat view
-          </button>
-        )}
       </div>
     </div>
   );

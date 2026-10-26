@@ -216,7 +216,7 @@ body {
 }
 
 /* Mini-map inset at the bottom of a panorama: frosted glass holding the whole scene in
-   miniature (part on screen + seat view marked) and a "Seat view" button. */
+   miniature, with the part on screen boxed and the seat view marked. */
 .pano-inset {
   position: absolute;
   left: 50%;
@@ -259,26 +259,6 @@ body {
   display: block;
   -webkit-user-drag: none;
   user-select: none;
-}
-.pano-inset-button {
-  flex: none;
-  min-height: 2.75rem;
-  padding-inline: 0.875rem;
-  border-radius: 0.5rem;
-  font-size: 0.95rem;
-  color: #fff;
-  background: rgb(255 255 255 / 0.16);
-  cursor: pointer;
-  opacity: 0;
-  pointer-events: none;
-  transition: background 160ms ease, opacity 200ms ease;
-}
-.pano-inset-button[data-visible="true"] {
-  opacity: 1;
-  pointer-events: auto;
-}
-.pano-inset-button:hover {
-  background: rgb(255 255 255 / 0.28);
 }
 .pano-overview-seat {
   position: absolute;

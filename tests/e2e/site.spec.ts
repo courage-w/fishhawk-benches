@@ -121,10 +121,9 @@ test.describe("bench pages", () => {
     const map = (await page.locator(".pano-overview").boundingBox())!;
     await page.mouse.click(map.x + map.width * 0.97, map.y + map.height / 2);
     await expect.poll(() => strip.evaluate((el) => el.scrollLeft)).toBeGreaterThan(before);
-    const back = page.getByRole("button", { name: "Seat view" });
-    await expect(back).toBeVisible();
-    await back.click();
-    await expect(back).toBeHidden();
+    const right = await strip.evaluate((el) => el.scrollLeft);
+    await page.mouse.click(map.x + map.width * 0.03, map.y + map.height / 2);
+    await expect.poll(() => strip.evaluate((el) => el.scrollLeft)).toBeLessThan(right);
   });
 
   test("the mini-map's white box tracks the photo on every frame", async ({ page }, info) => {
@@ -176,7 +175,7 @@ test.describe("bench pages", () => {
 
     expect(await page.evaluate(() => scrollY)).toBeGreaterThan(before.y);
     expect(await strip.evaluate((el) => el.scrollLeft)).toBe(before.x);
-    // The "Seat view" button keeps its space, so the mini-map never changes width.
+    // The mini-map keeps a steady size while you interact with it.
     expect((await map.boundingBox())!.width).toBeCloseTo(widthBefore, 0);
   });
 
