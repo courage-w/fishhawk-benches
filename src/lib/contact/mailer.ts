@@ -60,10 +60,12 @@ export async function sendContactMessage(input: ContactInput): Promise<SendResul
     console.info(`contact: accepted by Resend (id ${id})`);
     return { ok: true };
   } catch (error) {
-    // Name and cause code only: a bad-header TypeError's message can contain the API key.
-    const cause = (error as { cause?: { code?: unknown } }).cause?.code;
-    const header = /header/i.test((error as Error).message) ? ", invalid header" : "";
-    console.error(`contact: send failed (${(error as Error).name}${typeof cause === "string" ? `, ${cause}` : ""}${header})`);
+    // Error text can echo the API key (bad header) or an address, so both are blanked out.
+    const scrub = (s: unknown) =>
+      String(s ?? "").replace(/re_\w+/g, "re_***").replace(/[^\s"'<>]+@[^\s"'<>]+/g, "***@***").slice(0, 200);
+    const err = error as Error & { cause?: { name?: unknown; code?: unknown; message?: unknown } };
+    const cause = err.cause ? ` / cause ${scrub(err.cause.name)} ${scrub(err.cause.code)}: ${scrub(err.cause.message)}` : "";
+    console.error(`contact: send failed (${err.name}: ${scrub(err.message)}${cause})`);
     return { ok: false, reason: "failed" };
   }
 }
