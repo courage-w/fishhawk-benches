@@ -314,7 +314,7 @@ export function BenchMap({
         setLocating(false);
         setLocateError(
           err.code === err.PERMISSION_DENIED
-            ? "Location is turned off for this site. Allow it in your browser to find the nearest bench."
+            ? "Your browser said no to sharing your location. Allow it for this site. On an iPhone, also check Settings › Privacy & Security › Location Services › Safari Websites."
             : "Couldn't get your location just now. Try again in a moment.",
         );
       },
