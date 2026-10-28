@@ -32,9 +32,12 @@ export async function sendContactMessage(input: ContactInput): Promise<SendResul
     return { ok: true };
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
-  const to = process.env.CONTACT_TO_EMAIL;
-  const from = process.env.CONTACT_FROM_EMAIL;
+  // Values pasted or piped into a host's settings can carry a byte-order mark or stray whitespace,
+  // which breaks the Authorization header ("Cannot convert argument to a ByteString").
+  const env = (name: string) => process.env[name]?.replace(/﻿/g, "").trim() || undefined;
+  const apiKey = env("RESEND_API_KEY");
+  const to = env("CONTACT_TO_EMAIL");
+  const from = env("CONTACT_FROM_EMAIL");
   if (!apiKey || !to || !from) {
     console.error("contact: RESEND_API_KEY, CONTACT_TO_EMAIL and CONTACT_FROM_EMAIL must all be set");
     return { ok: false, reason: "not-configured" };
