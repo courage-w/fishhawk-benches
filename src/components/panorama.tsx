@@ -19,6 +19,21 @@ type Props = {
   label: string;
 };
 
+/**
+ * How wide the seat-view frame is, in panorama heights. Every panorama is shot at the same height
+ * of view, so a fixed multiple of the height is the same angle everywhere (about what you take in
+ * sitting still) and the frame looks the same on every bench. The stored `width` varied with how
+ * each view photo was zoomed, which made some frames twice as wide as others.
+ */
+const SEAT_VIEW_HEIGHTS = 0.9;
+
+/** Left edge and width of the seat-view frame, as fractions of the panorama width. */
+function seatSpan(seatView: SeatView, aspect: number) {
+  const width = Math.min(1, SEAT_VIEW_HEIGHTS / aspect);
+  const left = Math.min(1 - width, Math.max(0, seatView.center - width / 2));
+  return { left: `${left * 100}%`, width: `${width * 100}%` };
+}
+
 const reducedMotion = () =>
   typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -166,7 +181,7 @@ export function Panorama({ src, alt, width, height, blurDataURL, seatView, eager
             <div
               className="seat-view"
               aria-hidden="true"
-              style={{ left: `${(seatView.center - seatView.width / 2) * 100}%`, width: `${seatView.width * 100}%` }}
+              style={seatSpan(seatView, aspect)}
             >
               <span className="seat-view-label">View from the seat</span>
             </div>
@@ -188,7 +203,7 @@ export function Panorama({ src, alt, width, height, blurDataURL, seatView, eager
           {seatView && (
             <span
               className="pano-overview-seat"
-              style={{ left: `${(seatView.center - seatView.width / 2) * 100}%`, width: `${seatView.width * 100}%` }}
+              style={seatSpan(seatView, aspect)}
             />
           )}
           <span

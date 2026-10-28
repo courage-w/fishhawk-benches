@@ -25,7 +25,6 @@ export async function generateMetadata({ params }: PageProps<"/benches/[slug]">)
   const bench = getBench((await params).slug);
   // Next.js adds noindex to not-found responses itself.
   if (!bench) return { title: "Bench not found" };
-  const image = bench.view ?? bench.photos[0];
   const title = bench.seo?.title ?? bench.title;
   const description = bench.seo?.description ?? bench.summary;
   const path = `/benches/${bench.slug}`;
@@ -40,7 +39,7 @@ export async function generateMetadata({ params }: PageProps<"/benches/[slug]">)
       url: path,
       publishedTime: bench.addedAt,
       modifiedTime: bench.updatedAt ?? bench.addedAt,
-      images: [{ url: photoSrc(bench.slug, image), width: image.width, height: image.height, alt: image.alt }],
+      // The image itself comes from opengraph-image.tsx: the view photo with the bench name on it.
     },
     twitter: { card: "summary_large_image", title, description },
   };

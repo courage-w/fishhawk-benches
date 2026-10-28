@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-const PAGES = ["/", "/benches", "/benches/between-two-ponds", "/benches/corner-oaks", "/benches/tag/shaded", "/map", "/about", "/contact", "/privacy", "/terms"];
+const PAGES = ["/", "/benches", "/benches/between-two-ponds", "/benches/corner-oaks", "/benches/tag/shaded", "/map", "/about", "/contact", "/privacy", "/terms", "/offline"];
 
 // Don't hit OpenStreetMap from tests: answer tile requests with a blank PNG.
 const BLANK_PNG = Buffer.from(
@@ -183,7 +183,7 @@ test.describe("bench pages", () => {
     await page.goto("/benches/oak-shade-roadside");
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/benches\/oak-shade-roadside$/);
     await expect(page.locator('meta[property="og:type"]')).toHaveAttribute("content", "article");
-    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /\/photos\/oak-shade-roadside\//);
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /\/benches\/oak-shade-roadside\/opengraph-image/);
     const ld = await page.locator('script[type="application/ld+json"]').allTextContents();
     const article = ld.map((s) => JSON.parse(s)).find((d) => d["@type"] === "Article");
     expect(article.headline).toBe("Oak Shade by the Road");
@@ -320,6 +320,44 @@ test.describe("feeds and crawling", () => {
     for (const slug of ["between-two-ponds", "open-lawn-pond", "boardwalk-pond"]) expect(sitemap).toContain(`/benches/${slug}`);
     const robots = await (await request.get("/robots.txt")).text();
     expect(robots).toMatch(/Sitemap: http.*\/sitemap\.xml/);
+  });
+
+  test("each bench has its own share image", async ({ page, request }) => {
+    await page.goto("/benches/between-two-ponds");
+    const og = await page.locator('meta[property="og:image"]').getAttribute("content");
+    expect(og).toMatch(/\/benches\/between-two-ponds\/opengraph-image/);
+    const image = await request.get(new URL(og!).pathname + new URL(og!).search);
+    expect(image.status()).toBe(200);
+    expect(image.headers()["content-type"]).toBe("image/png");
+  });
+
+  test("the home page lists the newest benches first", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: "Recently added" })).toBeVisible();
+    await expect(page.getByText(/^Newest first\. The latest went up on/)).toBeVisible();
+  });
+});
+
+test.describe("offline", () => {
+  test.use({ serviceWorkers: "allow" });
+
+  test("pages you've opened still work without signal", async ({ page, context }) => {
+    // Service worker requests skip page.route, so stub tiles for the whole context.
+    await context.route("https://tile.openstreetmap.org/**", (route) =>
+      route.fulfill({ status: 200, contentType: "image/png", body: BLANK_PNG }),
+    );
+    await page.goto("/benches/corner-oaks");
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    // The first visit happened before the worker took over, so load once more to save it.
+    await page.reload();
+    await expect(page.locator("h1")).toHaveText("The Corner Oaks");
+
+    await context.setOffline(true);
+    await page.reload();
+    await expect(page.locator("h1")).toHaveText("The Corner Oaks");
+    await page.goto("/about");
+    await expect(page.locator("h1")).toHaveText("No signal right now");
+    await context.setOffline(false);
   });
 });
 

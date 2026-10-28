@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { BenchMap } from "@/components/bench-map";
-import { BenchRow, blur } from "@/components/bench-parts";
+import { BenchRow, blur, formatDate } from "@/components/bench-parts";
 import { JsonLd } from "@/components/json-ld";
 import { Panorama } from "@/components/panorama";
 import { getBenches, getTrashSpots, placeholderFor } from "@/lib/content/load";
@@ -18,12 +18,16 @@ function pickHero(benches: Bench[]) {
   return withPano.find((b) => b.features.waterView && !b.features.roadNearby) ?? withPano[0] ?? null;
 }
 
+/** How many of the newest benches the home page lists. */
+const RECENT = 6;
+
 const NUMBER_WORDS = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve"];
 
 export default function HomePage() {
   const benches = getBenches();
   const hero = pickHero(benches);
   const picks = homePicks(benches);
+  const latest = benches[0]?.addedAt;
   const count = NUMBER_WORDS[benches.length] ?? String(benches.length);
 
   return (
@@ -100,23 +104,26 @@ export default function HomePage() {
 
         <section aria-labelledby="benches-heading" className="mt-16">
           <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-rule pb-3">
-            <h2 id="benches-heading" className="text-3xl">All the benches</h2>
+            <h2 id="benches-heading" className="text-3xl">Recently added</h2>
             <Link href="/map" className="min-h-11 content-center">
               See them on the map
             </Link>
           </div>
-          {benches.length > 0 ? (
-            <div className="divide-y divide-rule">
-              {benches.slice(0, site.benchesPerPage).map((b) => (
-                <BenchRow key={b.slug} bench={b} />
-              ))}
-            </div>
+          {latest ? (
+            <>
+              <p className="meta mt-3">Newest first. The latest went up on {formatDate(latest)}.</p>
+              <div className="divide-y divide-rule">
+                {benches.slice(0, RECENT).map((b) => (
+                  <BenchRow key={b.slug} bench={b} />
+                ))}
+              </div>
+            </>
           ) : (
             <p className="py-10 text-ink-soft">No benches yet. The first ones are on their way.</p>
           )}
-          {benches.length > site.benchesPerPage && (
+          {benches.length > RECENT && (
             <p className="pt-2">
-              <Link href="/benches">Browse every bench</Link>
+              <Link href="/benches">Browse all {benches.length} benches</Link>
             </p>
           )}
         </section>

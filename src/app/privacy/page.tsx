@@ -51,6 +51,14 @@ export default function PrivacyPage() {
           or saved. You can say no, and the rest of the map works the same.
         </p>
 
+        <h2>Reading offline</h2>
+        <p>
+          So the guide still works where there&apos;s no signal, your browser keeps a copy of the pages, photos and
+          map images you&apos;ve already looked at. This copy stays on your device and isn&apos;t a cookie. We
+          can&apos;t see it, and nothing about it is sent to us. Clearing this site&apos;s data in your browser
+          settings removes it.
+        </p>
+
         <h2>The contact form</h2>
         <p>When you send a message we receive:</p>
         <ul>

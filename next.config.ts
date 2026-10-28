@@ -11,7 +11,9 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://tile.openstreetmap.org",
   "font-src 'self'",
-  "connect-src 'self'",
+  // The service worker re-fetches map tiles so it can keep the ones you've seen for offline use.
+  "connect-src 'self' https://tile.openstreetmap.org",
+  "worker-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -60,6 +62,11 @@ const nextConfig: NextConfig = {
         // Photo file names never change once published (a new photo gets a new name).
         source: "/photos/:path*",
         headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      {
+        // Browsers must check for a new service worker on every visit, or old ones linger.
+        source: "/sw.js",
+        headers: [{ key: "Cache-Control", value: "no-cache" }],
       },
     ];
   },
