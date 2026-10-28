@@ -43,8 +43,11 @@ export async function submitContact(_prev: ContactState, form: FormData): Promis
 
   const startedAt = Number(get("startedAt"));
   const elapsedMs = Number.isFinite(startedAt) && startedAt > 0 ? Date.now() - startedAt : null;
-  if (spamReason({ honeypot: get("website"), elapsedMs, message: values.message })) {
-    // Look successful so bots learn nothing; nothing is sent.
+  const spam = spamReason({ honeypot: get("website"), elapsedMs, message: values.message });
+  if (spam) {
+    // Look successful so bots learn nothing; nothing is sent. Log only the reason, so a real
+    // message that got caught can still be spotted in the server logs.
+    console.info(`contact: dropped as spam (${spam})`);
     return { status: "success", message: "Thanks! Your message is on its way." };
   }
 
