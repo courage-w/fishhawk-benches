@@ -55,6 +55,8 @@ const NO_FILTERS: MapFilter[] = [];
 const WALK_METERS_PER_MINUTE = 80;
 /** Farther than this from every bench, the reader is probably not in FishHawk right now. */
 const FAR_AWAY_METERS = 5000;
+/** Stop waiting on the browser after this long (its own 15 s timeout only covers finding the position). */
+const LOCATE_GIVE_UP_MS = 20_000;
 
 function distanceText(meters: number) {
   return meters < 1000 ? `${Math.round(meters / 10) * 10} m` : `${(meters / 1000).toFixed(1)} km`;
@@ -105,6 +107,8 @@ export function BenchMap({
   const layers = useRef<{ benches?: LayerGroup; trash?: LayerGroup; dog?: LayerGroup; wish?: LayerGroup }>({});
   const benchMarkers = useRef(new Map<string, Marker>());
   const youMarker = useRef<CircleMarker | null>(null);
+  /** Bumped on each "find nearest" press, so a late answer from an abandoned attempt is ignored. */
+  const locateAttempt = useRef(0);
   const [ready, setReady] = useState(false);
   const [showBenches, setShowBenches] = useState(true);
   const [showTrash, setShowTrash] = useState(true);
@@ -272,8 +276,25 @@ export function BenchMap({
       return;
     }
     setLocating(true);
+    const attempt = ++locateAttempt.current;
+    // The browser's own timeout only starts once permission is given. If the permission prompt is
+    // ignored, or a desktop browser has no way to find its location, no answer ever comes, so give up here.
+    const watchdog = window.setTimeout(() => {
+      if (locateAttempt.current !== attempt) return;
+      locateAttempt.current++;
+      setLocating(false);
+      setLocateError(
+        "Your browser didn't share a location. If it asked, choose Allow and try again. On a computer, location may also be off in system settings, and some browsers can't find it at all. This works best on a phone.",
+      );
+    }, LOCATE_GIVE_UP_MS);
+    const current = () => {
+      if (locateAttempt.current !== attempt) return false;
+      window.clearTimeout(watchdog);
+      return true;
+    };
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
+        if (!current()) return;
         setLocating(false);
         const here = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         const pool = visible.length > 0 ? visible : benches;
@@ -311,6 +332,7 @@ export function BenchMap({
         });
       },
       (err) => {
+        if (!current()) return;
         setLocating(false);
         setLocateError(
           err.code === err.PERMISSION_DENIED
@@ -394,7 +416,8 @@ export function BenchMap({
             {locating ? "Finding you…" : chosen.length > 0 ? "Find the nearest matching bench" : "Find the nearest bench"}
           </button>
           <p className="meta mt-2" aria-live="polite">
-            {locateError ||
+            {(locating && "Waiting for your location. If your browser asks to share it, choose Allow.") ||
+              locateError ||
               (found && "far" in found
                 ? `The nearest bench is ${distanceText(found.meters)} away, so you're probably not in FishHawk right now.`
                 : found && (

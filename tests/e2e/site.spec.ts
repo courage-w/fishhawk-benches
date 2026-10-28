@@ -302,6 +302,21 @@ test.describe("navigation", () => {
     await page.getByRole("button", { name: "Find the nearest bench" }).click();
     await expect(page.getByText(/probably not in FishHawk right now/)).toBeVisible();
   });
+
+  test("gives up if the browser never answers", async ({ page }) => {
+    // Like an ignored permission prompt, or a desktop browser with no way to find itself.
+    await page.addInitScript(() => {
+      navigator.geolocation.getCurrentPosition = () => {};
+    });
+    await page.clock.install();
+    await page.goto("/map");
+    const button = page.getByRole("button", { name: "Find the nearest bench" });
+    await button.click();
+    await expect(page.getByText(/^Waiting for your location/)).toBeVisible();
+    await page.clock.fastForward(21_000);
+    await expect(page.getByText(/^Your browser didn't share a location/)).toBeVisible();
+    await expect(button).toBeEnabled();
+  });
 });
 
 test.describe("feeds and crawling", () => {
