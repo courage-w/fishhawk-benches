@@ -24,9 +24,10 @@ const { values: args } = parseArgs({
 });
 
 async function preview(slug: string, panoFile: string, center: number, width: number) {
-  const meta = await sharp(panoFile).metadata();
-  const W = 1600;
-  const H = Math.round((meta.height! / meta.width!) * W);
+  // Size the overlay from the resized image itself; computing H by hand can be off by a pixel.
+  const { data, info } = await sharp(panoFile).resize({ width: 1600 }).toBuffer({ resolveWithObject: true });
+  const W = info.width;
+  const H = info.height;
   const left = Math.round((center - width / 2) * W);
   const right = Math.round((center + width / 2) * W);
   const svg = Buffer.from(
@@ -34,7 +35,7 @@ async function preview(slug: string, panoFile: string, center: number, width: nu
   );
   const out = path.join(ROOT, ".seat-view-preview");
   await mkdir(out, { recursive: true });
-  await sharp(panoFile).resize({ width: W }).composite([{ input: svg }]).jpeg().toFile(path.join(out, `${slug}.jpg`));
+  await sharp(data).composite([{ input: svg }]).jpeg().toFile(path.join(out, `${slug}.jpg`));
 }
 
 export async function locateForBench(slug: string, opts: { force: boolean; preview: boolean }) {
