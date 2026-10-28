@@ -9,7 +9,7 @@ import { loadContent, placeholderFor } from "../src/lib/content/load.ts";
 import { distanceMeters } from "../src/lib/geo.ts";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
-const { benches, trash, errors } = loadContent();
+const { benches, trash, wishes, errors } = loadContent();
 const warnings: string[] = [];
 
 for (const bench of benches) {
@@ -53,8 +53,18 @@ for (const spot of trash) {
   if (meta?.exif || meta?.xmp) errors.push(`content/trash-cans.json ${spot.id}: photo still has EXIF/XMP metadata`);
 }
 
+for (const wish of wishes) {
+  if (!wish.photo) continue;
+  const meta = await sharp(path.join(ROOT, "public", "photos", "wishes", wish.photo))
+    .metadata()
+    .catch(() => null);
+  if (meta?.exif || meta?.xmp) errors.push(`content/bench-wishes.json ${wish.id}: photo still has EXIF/XMP metadata`);
+}
+
 const published = benches.filter((b) => b.status === "published").length;
-console.log(`${published} published bench(es), ${benches.length - published} draft(s), ${trash.length} trash spot(s).`);
+console.log(
+  `${published} published bench(es), ${benches.length - published} draft(s), ${trash.length} trash spot(s), ${wishes.length} bench wish(es).`,
+);
 for (const w of warnings) console.log(`  warning: ${w}`);
 for (const e of errors) console.error(`  error:   ${e}`);
 if (errors.length > 0) {

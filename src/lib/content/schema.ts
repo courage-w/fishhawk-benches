@@ -109,6 +109,21 @@ export const trashSpotSchema = z
   })
   .strict();
 
+/** A spot with no bench yet where one would be nice (content/bench-wishes.json). */
+export const benchWishSchema = z
+  .object({
+    id: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+    lat: z.number().min(-90).max(90),
+    lng: z.number().min(-180).max(180),
+    note: z.string().trim().min(10).max(160),
+    photo: photoFile.optional(),
+    addedAt: isoDate,
+  })
+  .strict();
+
+export const benchWishesSchema = z.array(benchWishSchema).max(200);
+export type BenchWish = z.infer<typeof benchWishSchema>;
+
 export const trashSpotsSchema = z.array(trashSpotSchema).superRefine((spots, ctx) => {
   const ids = spots.map((s) => s.id);
   if (new Set(ids).size !== ids.length) ctx.addIssue({ code: "custom", message: "duplicate trash spot id" });

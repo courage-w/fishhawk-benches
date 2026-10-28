@@ -4,15 +4,16 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { bearingDegrees, compassPoint, distanceMeters, type CompassPoint } from "../geo.ts";
 import { parseBenchSource, type Bench } from "./parse.ts";
-import { SLUG_PATTERN, trashSpotsSchema, type TrashSpot } from "./schema.ts";
+import { benchWishesSchema, SLUG_PATTERN, trashSpotsSchema, type BenchWish, type TrashSpot } from "./schema.ts";
 import type { TagSlug } from "./traits.ts";
 
 const ROOT = process.cwd();
 const BENCH_DIR = path.join(ROOT, "content", "benches");
 const TRASH_FILE = path.join(ROOT, "content", "trash-cans.json");
+const WISH_FILE = path.join(ROOT, "content", "bench-wishes.json");
 const PHOTO_DIR = path.join(ROOT, "public", "photos");
 
-export type LoadReport = { benches: Bench[]; trash: TrashSpot[]; errors: string[] };
+export type LoadReport = { benches: Bench[]; trash: TrashSpot[]; wishes: BenchWish[]; errors: string[] };
 
 /** Validates every content file and collects all problems instead of stopping at the first. */
 export function loadContent(): LoadReport {
@@ -53,8 +54,25 @@ export function loadContent(): LoadReport {
     }
   }
 
+  let wishes: BenchWish[] = [];
+  if (existsSync(WISH_FILE)) {
+    try {
+      const raw = readFileSync(WISH_FILE, "utf8").replace(/^\uFEFF/, "");
+      const parsed = benchWishesSchema.safeParse(JSON.parse(raw));
+      if (parsed.success) wishes = parsed.data;
+      else errors.push(...parsed.error.issues.map((i) => `content/bench-wishes.json ${i.path.join(".")}: ${i.message}`));
+    } catch (error) {
+      errors.push(`content/bench-wishes.json: not valid JSON (${(error as Error).message})`);
+    }
+    for (const wish of wishes) {
+      if (wish.photo && !existsSync(path.join(PHOTO_DIR, "wishes", wish.photo))) {
+        errors.push(`content/bench-wishes.json ${wish.id}: photo public/photos/wishes/${wish.photo} does not exist`);
+      }
+    }
+  }
+
   benches.sort((a, b) => b.addedAt.localeCompare(a.addedAt) || a.title.localeCompare(b.title));
-  return { benches, trash, errors };
+  return { benches, trash, wishes, errors };
 }
 
 let cache: LoadReport | null = null;
@@ -88,6 +106,10 @@ export function getBenchesByTag(tag: TagSlug): Bench[] {
 
 export function getTrashSpots(): TrashSpot[] {
   return content().trash;
+}
+
+export function getBenchWishes(): BenchWish[] {
+  return content().wishes;
 }
 
 let placeholders: Record<string, string> | null = null;

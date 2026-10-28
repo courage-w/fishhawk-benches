@@ -4,7 +4,7 @@ import { formatDate } from "@/components/bench-parts";
 
 export const ensureStatic = "navigation";
 
-const UPDATED = "2026-10-25";
+const UPDATED = "2026-10-28";
 
 export const metadata: Metadata = {
   title: "Privacy policy",
@@ -44,6 +44,11 @@ export default function PrivacyPage() {
           </a>
           . The &quot;Open in Google Maps&quot; and &quot;Open in Apple Maps&quot; links take you to those services,
           under their own policies, only if you click them.
+        </p>
+        <p>
+          The &quot;Find the nearest bench&quot; button asks your browser for your location, only when you press it.
+          Your location is used on your device to work out the closest bench and is never sent to us or anyone else,
+          or saved. You can say no, and the rest of the map works the same.
         </p>
 
         <h2>The contact form</h2>

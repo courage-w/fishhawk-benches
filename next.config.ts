@@ -28,7 +28,7 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   // OpenStreetMap's tile policy needs a Referer; strict-origin sends only the origin.
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self), payment=(), usb=(), interest-cohort=()" },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
 ];
 

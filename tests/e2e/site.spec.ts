@@ -261,6 +261,47 @@ test.describe("navigation", () => {
     await page.getByRole("checkbox", { name: /Dog bag stations/ }).check();
     await expect(dogPins.first()).toBeAttached();
   });
+
+  test("filters narrow the bench pins", async ({ page }) => {
+    await page.goto("/map");
+    const benchPins = page.locator(".leaflet-container .pin-bench");
+    await expect(benchPins.first()).toBeAttached();
+    const all = await benchPins.count();
+    const water = page.getByRole("button", { name: "Water view" });
+    await water.click();
+    await expect(water).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByText(/^Showing \d+ of \d+ benches\.$/)).toBeVisible();
+    const filtered = await benchPins.count();
+    expect(filtered).toBeGreaterThan(0);
+    expect(filtered).toBeLessThan(all);
+    await water.click();
+    await expect(benchPins).toHaveCount(all);
+  });
+
+  test("bench wishes have their own dashed pins", async ({ page }) => {
+    await page.goto("/map");
+    const wishPins = page.locator(".leaflet-container .pin-wish");
+    await expect(wishPins.first()).toBeAttached();
+    await page.getByRole("checkbox", { name: /Bench wishes/ }).uncheck();
+    await expect(wishPins).toHaveCount(0);
+  });
+
+  test("finds the nearest bench from your location", async ({ page, context }) => {
+    await context.grantPermissions(["geolocation"]);
+    await context.setGeolocation({ latitude: 27.850868, longitude: -82.227061 });
+    await page.goto("/map");
+    await page.getByRole("button", { name: "Find the nearest bench" }).click();
+    await expect(page.getByText(/^Nearest: .+ min walk\)\.$/)).toBeVisible();
+    await expect(page.locator(".leaflet-popup")).toBeVisible();
+  });
+
+  test("says so when you're far from FishHawk", async ({ page, context }) => {
+    await context.grantPermissions(["geolocation"]);
+    await context.setGeolocation({ latitude: 40.7128, longitude: -74.006 });
+    await page.goto("/map");
+    await page.getByRole("button", { name: "Find the nearest bench" }).click();
+    await expect(page.getByText(/probably not in FishHawk right now/)).toBeVisible();
+  });
 });
 
 test.describe("feeds and crawling", () => {

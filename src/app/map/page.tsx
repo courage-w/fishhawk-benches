@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BenchMap } from "@/components/bench-map";
 import { featureLine } from "@/components/bench-parts";
-import { getBenches, getTrashSpots } from "@/lib/content/load";
-import { toMapBenches, toMapTrash } from "@/lib/content/map-data";
+import { getBenches, getBenchWishes, getTrashSpots } from "@/lib/content/load";
+import { toMapBenches, toMapTrash, toMapWishes } from "@/lib/content/map-data";
+import { TAGS, TAG_SLUGS } from "@/lib/content/traits";
 
 export const ensureStatic = "navigation";
 
@@ -16,7 +17,10 @@ export const metadata: Metadata = {
 export default function MapPage() {
   const benches = getBenches();
   const trash = getTrashSpots();
+  const wishes = getBenchWishes();
   const dogStations = trash.filter((t) => t.dogBags).length;
+  // Only offer filters that match at least one bench.
+  const filters = TAG_SLUGS.filter((t) => benches.some((b) => b.tags.includes(t))).map((t) => ({ slug: t, label: TAGS[t].label }));
   return (
     <div className="frame pt-12 sm:pt-16">
       <h1 className="display text-5xl sm:text-6xl">The map</h1>
@@ -29,6 +33,9 @@ export default function MapPage() {
         <BenchMap
           benches={toMapBenches(benches)}
           trash={toMapTrash(trash)}
+          wishes={toMapWishes(wishes)}
+          filters={filters}
+          locate
           showToggles
           className="h-[70vh] min-h-[24rem]"
           label="Map of benches and trash cans in FishHawk Ranch"
@@ -53,6 +60,12 @@ export default function MapPage() {
             `, ${dogStations === 1 ? "one of them a dog bag station" : `${dogStations} of them dog bag stations`} with free bags`}
           . Benches with a trash can right beside them say so on their page.
         </p>
+        {wishes.length > 0 && (
+          <p className="meta mt-2">
+            Dashed pins are bench wishes: nice spots with nowhere to sit yet.{" "}
+            <Link href="/contact">Know one?</Link>
+          </p>
+        )}
       </section>
     </div>
   );

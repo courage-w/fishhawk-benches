@@ -379,6 +379,14 @@ body {
   background: var(--moss);
   color: var(--paper-raised);
 }
+/* A spot with no bench yet: hollow, dashed version of the bench pin. */
+.pin-wish {
+  width: 30px;
+  height: 30px;
+  background: var(--paper-raised);
+  color: var(--pond);
+  border: 2px dashed var(--pond);
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,

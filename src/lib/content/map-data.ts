@@ -1,8 +1,8 @@
 // Slim, serializable shapes for the client-side map (keeps bench bodies out of the JS payload).
-import type { MapBench, MapTrash } from "@/components/bench-map";
+import type { MapBench, MapTrash, MapWish } from "@/components/bench-map";
 import { thumbUrl } from "@/lib/images";
 import { photoSrc, type Bench } from "./parse";
-import type { TrashSpot } from "./schema";
+import type { BenchWish, TrashSpot } from "./schema";
 
 export function toMapBenches(benches: Bench[]): MapBench[] {
   return benches.map((b) => {
@@ -14,9 +14,20 @@ export function toMapBenches(benches: Bench[]): MapBench[] {
       lng: b.location.lng,
       summary: b.summary,
       trashCan: b.features.trashCan,
+      tags: b.tags,
       thumb: photo ? thumbUrl(photoSrc(b.slug, photo)) : null,
     };
   });
+}
+
+export function toMapWishes(wishes: BenchWish[]): MapWish[] {
+  return wishes.map((w) => ({
+    id: w.id,
+    lat: w.lat,
+    lng: w.lng,
+    note: w.note,
+    thumb: w.photo ? thumbUrl(`/photos/wishes/${w.photo}`) : null,
+  }));
 }
 
 export function toMapTrash(spots: TrashSpot[]): MapTrash[] {
