@@ -322,6 +322,24 @@ test.describe("contact form", () => {
     await expect(page.getByRole("status")).toContainText("Thanks! Your message is on its way.");
   });
 
+  test("a visitor whose clock is wrong isn't mistaken for a bot", async ({ page }) => {
+    // A fast system clock used to make real messages look instant, so they were silently dropped.
+    await page.addInitScript(() => {
+      const realNow = Date.now.bind(Date);
+      Date.now = () => realNow() + 10 * 60_000;
+    });
+    await page.goto("/contact");
+    await page.waitForTimeout(3200);
+    await page.getByLabel("Your email").fill("visitor@example.com");
+    await page.getByLabel("Message").fill("My phone's clock is ten minutes fast.");
+    const post = page.waitForRequest((r) => r.method() === "POST" && r.url().includes("/contact"));
+    await page.getByRole("button", { name: "Send message" }).click();
+    const body = (await post).postData() ?? "";
+    const elapsed = Number(body.match(/name="(?:_\d+_)?elapsedMs"\r\n\r\n(\d+)/)?.[1]);
+    expect(elapsed).toBeGreaterThanOrEqual(3000);
+    await expect(page.getByRole("status")).toContainText("Thanks! Your message is on its way.");
+  });
+
   test("keeps what you typed when there's an error", async ({ page }) => {
     await page.goto("/contact");
     await page.waitForTimeout(3200);

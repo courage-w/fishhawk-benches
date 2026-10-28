@@ -12,13 +12,22 @@ const errorText = "mt-1 text-base text-[#9b3b2f] dark:text-[#f0b2a6]";
 
 export function ContactForm() {
   const [state, action, pending] = useActionState(submitContact, initial);
-  const startedAt = useRef<HTMLInputElement>(null);
+  const elapsed = useRef<HTMLInputElement>(null);
+  const shownAt = useRef<number | null>(null);
   const statusRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Time the form became usable; quick-fire bot submissions are filtered on the server.
-    if (startedAt.current && !startedAt.current.value) startedAt.current.value = String(Date.now());
+    // When the form became usable; quick-fire bot submissions are filtered on the server.
+    // Measured with the browser's own monotonic clock, so a visitor's wrong system clock can't
+    // make a real message look instant.
+    shownAt.current = performance.now();
   }, []);
+
+  const recordElapsed = () => {
+    if (elapsed.current && shownAt.current !== null) {
+      elapsed.current.value = String(Math.round(performance.now() - shownAt.current));
+    }
+  };
 
   useEffect(() => {
     if (state.status !== "idle") statusRef.current?.focus();
@@ -40,7 +49,7 @@ export function ContactForm() {
     [e[k] ? `${k}-error` : null, hint].filter(Boolean).join(" ") || undefined;
 
   return (
-    <form action={action} noValidate className="max-w-xl space-y-6">
+    <form action={action} onSubmit={recordElapsed} noValidate className="max-w-xl space-y-6">
       {state.status === "error" && (
         <div ref={statusRef} tabIndex={-1} role="alert" className="rounded-lg border border-[#9b3b2f] bg-paper-raised p-4 dark:border-[#e59a8c]">
           {state.message}
@@ -109,7 +118,7 @@ export function ContactForm() {
         <label htmlFor="website">Leave this empty</label>
         <input id="website" name="website" tabIndex={-1} autoComplete="off" />
       </div>
-      <input ref={startedAt} type="hidden" name="startedAt" />
+      <input ref={elapsed} type="hidden" name="elapsedMs" />
 
       <button
         type="submit"

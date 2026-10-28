@@ -41,8 +41,9 @@ export async function submitContact(_prev: ContactState, form: FormData): Promis
     };
   }
 
-  const startedAt = Number(get("startedAt"));
-  const elapsedMs = Number.isFinite(startedAt) && startedAt > 0 ? Date.now() - startedAt : null;
+  // Measured in the browser (not client clock vs server clock, which drift apart).
+  const elapsedRaw = get("elapsedMs");
+  const elapsedMs = /^\d{1,10}$/.test(elapsedRaw) ? Number(elapsedRaw) : null;
   const spam = spamReason({ honeypot: get("website"), elapsedMs, message: values.message });
   if (spam) {
     // Look successful so bots learn nothing; nothing is sent. Log only the reason, so a real
