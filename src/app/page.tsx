@@ -123,7 +123,7 @@ export default function HomePage() {
 
         <section aria-labelledby="map-heading" className="mt-16">
           <h2 id="map-heading" className="text-3xl">Where they are</h2>
-          <p className="meta mt-2 mb-5">Blue pins are benches, small grey ones are trash cans. Tap a pin for a peek.</p>
+          <p className="meta mt-2 mb-5">Blue pins are benches, small grey ones are trash cans, and green paws are dog bag stations. Tap a pin for a peek.</p>
           <BenchMap
             benches={toMapBenches(benches)}
             trash={toMapTrash(getTrashSpots())}

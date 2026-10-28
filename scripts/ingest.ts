@@ -3,6 +3,7 @@
  *
  *   npm run ingest                       # benches from ./photos-inbox
  *   npm run ingest -- --trash            # every photo becomes a trash-can spot
+ *   npm run ingest -- --trash --dog-bags # ...marked as a dog bag station (bags + can)
  *   npm run ingest -- --dry-run          # show the grouping, write nothing
  *   npm run ingest -- --inbox ../pics    # read photos from another folder
  *
@@ -31,6 +32,7 @@ const { values: args } = parseArgs({
   options: {
     inbox: { type: "string", default: "photos-inbox" },
     trash: { type: "boolean", default: false },
+    "dog-bags": { type: "boolean", default: false },
     "dry-run": { type: "boolean", default: false },
   },
 });
@@ -155,16 +157,27 @@ async function ingestBenches(photos: Scanned[], dryRun: boolean) {
   console.log(`\nFound ${groups.length} bench group(s):`);
   for (const group of groups) {
     const first = group[0];
-    const slug = `bench-${localStamp(first.takenAtLocal)}`;
+    // Two benches photographed in the same minute get -b, -c… instead of colliding.
+    const base = `bench-${localStamp(first.takenAtLocal)}`;
+    const firstWeb = path.basename(first.file).replace(/\.[^.]+$/, "").toLowerCase() + ".jpg";
+    let slug = base;
+    let alreadyImported = false;
+    for (let n = 1; await exists(path.join(BENCH_DIR, `${slug}.md`)); n++) {
+      if ((await readFile(path.join(BENCH_DIR, `${slug}.md`), "utf8")).includes(`file: ${firstWeb}`)) {
+        alreadyImported = true;
+        break;
+      }
+      slug = `${base}-${String.fromCharCode(97 + n)}`;
+    }
     const files = group.map((p) => `${p.file}${p.isPanorama ? " (panorama)" : ""}`).join(", ");
     console.log(`  ${slug}: ${files}`);
+    if (alreadyImported) {
+      console.log(`    already imported, skipped (content/benches/${slug}.md)`);
+      continue;
+    }
     if (dryRun) continue;
 
     const mdPath = path.join(BENCH_DIR, `${slug}.md`);
-    if (await exists(mdPath)) {
-      console.log(`    already exists, skipped (${path.relative(ROOT, mdPath)})`);
-      continue;
-    }
 
     // Guess: the first non-panorama shot is the view from the bench. Fix in the draft if not.
     const viewIndex = group.findIndex((p) => !p.isPanorama);
@@ -208,7 +221,7 @@ async function ingestBenches(photos: Scanned[], dryRun: boolean) {
   }
 }
 
-type TrashSpot = { id: string; lat: number; lng: number; photo?: string; addedAt: string };
+type TrashSpot = { id: string; lat: number; lng: number; photo?: string; dogBags?: boolean; addedAt: string };
 
 async function ingestTrash(photos: Scanned[], dryRun: boolean) {
   const existing: TrashSpot[] = (await exists(TRASH_FILE))
@@ -230,6 +243,7 @@ async function ingestTrash(photos: Scanned[], dryRun: boolean) {
       lat: round6(p.lat),
       lng: round6(p.lng),
       photo: web.file,
+      ...(args["dog-bags"] ? { dogBags: true } : {}),
       addedAt: localDate(p.takenAtLocal),
     });
   }

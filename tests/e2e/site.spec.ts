@@ -249,6 +249,18 @@ test.describe("navigation", () => {
     await page.getByRole("checkbox", { name: /Trash cans/ }).check();
     await expect(trashPins.first()).toBeAttached();
   });
+
+  test("dog bag stations have their own pins and toggle", async ({ page }) => {
+    await page.goto("/map");
+    const dogPins = page.locator(".leaflet-container .pin-dog");
+    const trashPins = page.locator(".leaflet-container .pin-trash");
+    await expect(dogPins.first()).toBeAttached();
+    await page.getByRole("checkbox", { name: /Dog bag stations/ }).uncheck();
+    await expect(dogPins).toHaveCount(0);
+    await expect(trashPins.first()).toBeAttached();
+    await page.getByRole("checkbox", { name: /Dog bag stations/ }).check();
+    await expect(dogPins.first()).toBeAttached();
+  });
 });
 
 test.describe("feeds and crawling", () => {

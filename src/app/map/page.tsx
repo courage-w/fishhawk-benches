@@ -16,11 +16,12 @@ export const metadata: Metadata = {
 export default function MapPage() {
   const benches = getBenches();
   const trash = getTrashSpots();
+  const dogStations = trash.filter((t) => t.dogBags).length;
   return (
     <div className="frame pt-12 sm:pt-16">
       <h1 className="display text-5xl sm:text-6xl">The map</h1>
       <p className="lede mt-5">
-        Every bench, plus the trash cans spotted along the way. Zoom in to see them all, and tap a bench for a
+        Every bench, plus the trash cans and dog bag stations spotted along the way. Zoom in to see them all, and tap a bench for a
         peek at its view.
       </p>
 
@@ -47,8 +48,10 @@ export default function MapPage() {
           ))}
         </ul>
         <p className="meta mt-4">
-          {trash.length === 1 ? "One trash can is" : `${trash.length} trash cans are`} marked on the map on their own.
-          Benches with a trash can right beside them say so on their page.
+          {trash.length === 1 ? "One trash can is" : `${trash.length} trash cans are`} marked on the map on their own
+          {dogStations > 0 &&
+            `, ${dogStations === 1 ? "one of them a dog bag station" : `${dogStations} of them dog bag stations`} with free bags`}
+          . Benches with a trash can right beside them say so on their page.
         </p>
       </section>
     </div>

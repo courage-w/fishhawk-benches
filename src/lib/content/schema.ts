@@ -103,6 +103,8 @@ export const trashSpotSchema = z
     lng: z.number().min(-180).max(180),
     photo: photoFile.optional(),
     note: z.string().trim().max(140).optional(),
+    /** A dog-waste station: bag dispenser next to the can. */
+    dogBags: z.boolean().optional(),
     addedAt: isoDate,
   })
   .strict();

@@ -24,6 +24,7 @@ export function toMapTrash(spots: TrashSpot[]): MapTrash[] {
     id: s.id,
     lat: s.lat,
     lng: s.lng,
+    dogBags: s.dogBags ?? false,
     thumb: s.photo ? thumbUrl(`/photos/trash/${s.photo}`) : null,
   }));
 }

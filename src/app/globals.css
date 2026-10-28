@@ -373,6 +373,12 @@ body {
   background: var(--ink-soft);
   color: var(--paper-raised);
 }
+.pin-dog {
+  width: 20px;
+  height: 20px;
+  background: var(--moss);
+  color: var(--paper-raised);
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -14,7 +14,7 @@ export type MapBench = {
   thumb: string | null;
 };
 
-export type MapTrash = { id: string; lat: number; lng: number; thumb: string | null };
+export type MapTrash = { id: string; lat: number; lng: number; dogBags: boolean; thumb: string | null };
 
 type Props = {
   benches: MapBench[];
@@ -23,7 +23,7 @@ type Props = {
   activeSlug?: string;
   zoom?: number;
   className?: string;
-  /** Show the "Benches / Trash cans" checkboxes. */
+  /** Show the "Benches / Trash cans / Dog bags" checkboxes. */
   showToggles?: boolean;
   label: string;
 };
@@ -32,6 +32,8 @@ const BENCH_SVG =
   '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 9.5h16M4 6.5h16M3 13h18M6 13v5M18 13v5M6 6.5v6.5M18 6.5v6.5"/></svg>';
 const TRASH_SVG =
   '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 7h14M6.5 7l1 12h9l1-12"/></svg>';
+const DOG_SVG =
+  '<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><ellipse cx="12" cy="16" rx="5" ry="4.2"/><circle cx="5.5" cy="10" r="2.2"/><circle cx="9.5" cy="5.8" r="2.2"/><circle cx="14.5" cy="5.8" r="2.2"/><circle cx="18.5" cy="10" r="2.2"/></svg>';
 
 // Popups are built with DOM APIs and textContent, never HTML strings, so content can't inject markup.
 function popup(parts: { title: string; text?: string; href?: string; img?: string | null }) {
@@ -62,9 +64,12 @@ function popup(parts: { title: string; text?: string; href?: string; img?: strin
 export function BenchMap({ benches, trash = [], activeSlug, zoom, className = "h-96", showToggles, label }: Props) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<LeafletMap | null>(null);
-  const layers = useRef<{ benches?: LayerGroup; trash?: LayerGroup }>({});
+  const layers = useRef<{ benches?: LayerGroup; trash?: LayerGroup; dog?: LayerGroup }>({});
   const [showBenches, setShowBenches] = useState(true);
   const [showTrash, setShowTrash] = useState(true);
+  const [showDog, setShowDog] = useState(true);
+  const plainTrash = trash.filter((t) => !t.dogBags);
+  const dogStations = trash.filter((t) => t.dogBags);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
@@ -107,23 +112,26 @@ export function BenchMap({ benches, trash = [], activeSlug, zoom, className = "h
           }),
         ).addTo(m);
 
-        const trashLayer = L.layerGroup(
-          trash.map((t) =>
-            L.marker([t.lat, t.lng], {
-              title: "Trash can",
-              alt: "Trash can",
-              keyboard: true,
-              icon: L.divIcon({
-                className: "",
-                html: `<span class="pin pin-trash">${TRASH_SVG}</span>`,
-                iconSize: [20, 20],
-                iconAnchor: [10, 10],
-                popupAnchor: [0, -10],
-              }),
-            }).bindPopup(popup({ title: "Trash can", img: t.thumb })),
-          ),
-        ).addTo(m);
-        layers.current = { benches: benchLayer, trash: trashLayer };
+        const smallPins = (spots: MapTrash[], title: string, className: string, svg: string, text?: string) =>
+          L.layerGroup(
+            spots.map((t) =>
+              L.marker([t.lat, t.lng], {
+                title,
+                alt: title,
+                keyboard: true,
+                icon: L.divIcon({
+                  className: "",
+                  html: `<span class="pin ${className}">${svg}</span>`,
+                  iconSize: [20, 20],
+                  iconAnchor: [10, 10],
+                  popupAnchor: [0, -10],
+                }),
+              }).bindPopup(popup({ title, text, img: t.thumb })),
+            ),
+          ).addTo(m);
+        const trashLayer = smallPins(trash.filter((t) => !t.dogBags), "Trash can", "pin-trash", TRASH_SVG);
+        const dogLayer = smallPins(trash.filter((t) => t.dogBags), "Dog bag station", "pin-dog", DOG_SVG, "Free bags and a trash can.");
+        layers.current = { benches: benchLayer, trash: trashLayer, dog: dogLayer };
 
         // Frame the pins once the container has a real size; fitting at 0×0 jumps to max zoom.
         const active = benches.find((b) => b.slug === activeSlug);
@@ -161,13 +169,15 @@ export function BenchMap({ benches, trash = [], activeSlug, zoom, className = "h
 
   useEffect(() => {
     const m = map.current;
-    const { benches: b, trash: t } = layers.current;
-    if (!m || !b || !t) return;
+    const { benches: b, trash: t, dog: d } = layers.current;
+    if (!m || !b || !t || !d) return;
     if (showBenches) b.addTo(m);
     else b.remove();
     if (showTrash) t.addTo(m);
     else t.remove();
-  }, [showBenches, showTrash]);
+    if (showDog) d.addTo(m);
+    else d.remove();
+  }, [showBenches, showTrash, showDog]);
 
   return (
     <div>
@@ -182,8 +192,15 @@ export function BenchMap({ benches, trash = [], activeSlug, zoom, className = "h
           <label className="inline-flex min-h-11 cursor-pointer items-center gap-2">
             <input type="checkbox" checked={showTrash} onChange={(e) => setShowTrash(e.target.checked)} className="h-5 w-5 accent-[var(--pond)]" />
             <span className="pin pin-trash" aria-hidden="true" dangerouslySetInnerHTML={{ __html: TRASH_SVG }} />
-            Trash cans ({trash.length})
+            Trash cans ({plainTrash.length})
           </label>
+          {dogStations.length > 0 && (
+            <label className="inline-flex min-h-11 cursor-pointer items-center gap-2">
+              <input type="checkbox" checked={showDog} onChange={(e) => setShowDog(e.target.checked)} className="h-5 w-5 accent-[var(--pond)]" />
+              <span className="pin pin-dog" aria-hidden="true" dangerouslySetInnerHTML={{ __html: DOG_SVG }} />
+              Dog bag stations ({dogStations.length})
+            </label>
+          )}
         </fieldset>
       )}
       <div className={`bench-map relative overflow-hidden rounded-lg border border-rule ${className}`}>

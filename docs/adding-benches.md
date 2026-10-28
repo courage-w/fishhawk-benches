@@ -2,12 +2,14 @@
 
 1. At each bench take the **view from the seat**, a couple of **photos of the bench**, and a
    **panorama** last. Keep Location Services on for the Camera.
-2. Copy the photos (HEIC is fine) into `photos-inbox/`. Trash-can photos go in `photos-inbox-trash/`.
+2. Copy the photos (HEIC is fine) into `photos-inbox/`. Trash-can photos go in `photos-inbox-trash/`,
+   and dog bag stations (bag dispenser + can) in `photos-inbox-dog/`.
 3. Preview the grouping, then import:
    ```bash
    npm run ingest -- --dry-run
    npm run ingest
    npm run ingest -- --trash --inbox photos-inbox-trash
+   npm run ingest -- --trash --dog-bags --inbox photos-inbox-dog
    ```
    Each bench becomes a draft in `content/benches/` with metadata-free photos in `public/photos/`.
 4. Fill in the `TODO`s in each draft: name, summary, which photo is the `view`, alt text, and
