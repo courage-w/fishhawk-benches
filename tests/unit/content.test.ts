@@ -82,10 +82,11 @@ describe("parseBenchSource", () => {
     expect(parseBenchSource("x", bomb).ok).toBe(false);
   });
 
-  it("treats code-looking YAML tags as plain text, never executing them", () => {
+  it("refuses code-looking YAML tags instead of guessing what they mean", () => {
     const tagged = source(base).replace("title: Test Bench", 'title: !!js/function "() => 1"');
     const r = parseBenchSource("x", tagged);
-    if (r.ok) expect(typeof r.bench.title).toBe("string");
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors[0]).toMatch(/not valid YAML/);
   });
 });
 

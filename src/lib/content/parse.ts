@@ -1,5 +1,5 @@
 // Pure parsing for bench files: no fs, so it can be unit-tested and reused by scripts.
-import { parse as parseYaml } from "yaml";
+import { parseDocument } from "yaml";
 import { compassPoint, type CompassPoint } from "../geo.ts";
 import { sunNote, type SunNote } from "../sun.ts";
 import { benchFrontmatterSchema, SLUG_PATTERN, type BenchFrontmatter, type BenchPhoto } from "./schema.ts";
@@ -36,7 +36,12 @@ export function parseBenchSource(slug: string, source: string): ParseResult {
   let data: unknown;
   try {
     // Core schema: no custom tags, no timestamps-as-Dates; alias cap guards against "billion laughs".
-    data = parseYaml(match[1], { schema: "core", maxAliasCount: 20, uniqueKeys: true });
+    // Anything the parser would only warn about (an unknown tag such as !!js/function) is refused
+    // outright, so a bench file is either plain data or an error, never something in between.
+    const doc = parseDocument(match[1], { schema: "core", uniqueKeys: true, logLevel: "silent" });
+    const problem = doc.errors[0] ?? doc.warnings[0];
+    if (problem) throw problem;
+    data = doc.toJS({ maxAliasCount: 20 });
   } catch (error) {
     return { ok: false, errors: [`frontmatter is not valid YAML: ${(error as Error).message}`] };
   }

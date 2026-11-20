@@ -241,6 +241,62 @@ test.describe("bench pages", () => {
   });
 });
 
+test.describe("user flows", () => {
+  test("from the home page to a bench, then to the map", async ({ page }) => {
+    const errors = trackErrors(page);
+    await page.goto("/");
+    // The first "Start here" pick is the best-view bench.
+    const pick = page.getByRole("region", { name: "Start here" }).getByRole("link").first();
+    const title = (await pick.locator("span").nth(2).textContent())!.trim();
+    await pick.click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
+    await page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Benches" }).click();
+    await expect(page).toHaveURL(/\/benches$/);
+    await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Map" }).click();
+    await expect(page.getByRole("button", { name: "Find the nearest bench" })).toBeEnabled();
+    expect(errors).toEqual([]);
+  });
+
+  test("a tag link leads to a list of similar benches", async ({ page }) => {
+    await page.goto("/benches/between-two-ponds");
+    const tags = page.getByRole("list", { name: "Find similar benches" });
+    const first = tags.getByRole("link").first();
+    const label = (await first.textContent())!.trim();
+    await first.click();
+    await expect(page).toHaveURL(/\/benches\/tag\//);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(new RegExp(label, "i"));
+    await expect(page.getByRole("link", { name: "Between Two Ponds" }).first()).toBeVisible();
+  });
+
+  test("the 404 page offers ways back that work", async ({ page }) => {
+    const response = await page.goto("/benches/no-such-bench");
+    expect(response?.status()).toBe(404);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("This bench is empty.");
+    await page.getByRole("link", { name: "Browse all benches" }).click();
+    await expect(page).toHaveURL(/\/benches$/);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  });
+});
+
+test.describe("accessible names at phone and desktop widths", () => {
+  for (const width of [375, 1440]) {
+    test(`every control is labelled at ${width}px`, async ({ page }, info) => {
+      test.skip(info.project.name === "mobile", "sizes set here; one project is enough");
+      await page.setViewportSize({ width, height: 900 });
+      for (const path of ["/", "/benches/between-two-ponds", "/map", "/contact", "/nope"]) {
+        await page.goto(path);
+        await page.waitForLoadState("networkidle");
+        // Only the rules about names and roles: buttons, links, form fields, images, landmarks.
+        const results = await new AxeBuilder({ page })
+          .withRules(["button-name", "link-name", "label", "select-name", "image-alt", "aria-allowed-role", "aria-required-children", "landmark-one-main", "region"])
+          .exclude(".leaflet-container")
+          .analyze();
+        expect(results.violations.map((v) => `${path} ${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
+      }
+    });
+  }
+});
+
 test.describe("navigation", () => {
   test("header links reach each section and mark the current page", async ({ page }, info) => {
     test.skip(info.project.name === "mobile", "same markup on mobile");
@@ -458,6 +514,51 @@ test.describe("contact form", () => {
     const body = (await post).postData() ?? "";
     const elapsed = Number(body.match(/name="(?:_\d+_)?elapsedMs"\r\n\r\n(\d+)/)?.[1]);
     expect(elapsed).toBeGreaterThanOrEqual(3000);
+    await expect(page.getByRole("status")).toContainText("Thanks! Your message is on its way.");
+  });
+
+  test("an empty form flags both required fields with their own messages", async ({ page }) => {
+    await page.goto("/contact");
+    await page.waitForTimeout(3200);
+    await page.getByRole("button", { name: "Send message" }).click();
+    for (const label of ["Your email", "Message"]) {
+      const field = page.getByLabel(label);
+      await expect(field).toHaveAttribute("aria-invalid", "true");
+      // Each error is tied to its field, so screen readers read it with the field.
+      const describedBy = (await field.getAttribute("aria-describedby")) ?? "";
+      const errorId = describedBy.split(" ").find((id) => id.endsWith("-error"));
+      expect(errorId, label).toBeTruthy();
+      await expect(page.locator(`#${errorId}`)).not.toBeEmpty();
+    }
+  });
+
+  test("a bad email and a too-short message get specific advice", async ({ page }) => {
+    await page.goto("/contact");
+    await page.waitForTimeout(3200);
+    await page.getByLabel("Your email").fill("not-an-email");
+    await page.getByLabel("Message").fill("Hi");
+    await page.getByRole("button", { name: "Send message" }).click();
+    await expect(page.getByText("Please enter an email address like you@example.com.")).toBeVisible();
+    await expect(page.getByText("Please write a little more (at least 10 characters).")).toBeVisible();
+    // Focus moves to the summary so keyboard and screen-reader users hear what went wrong.
+    await expect(page.getByRole("alert").filter({ hasText: "Please fix the highlighted fields." })).toBeFocused();
+  });
+
+  test("the send button shows it's working and can't be pressed twice", async ({ page }) => {
+    await page.goto("/contact");
+    await page.waitForTimeout(3200);
+    await page.getByLabel("Your email").fill("visitor@example.com");
+    await page.getByLabel("Message").fill("Checking the button's sending state.");
+    // Hold the request so the in-between state can be seen.
+    let release!: () => void;
+    const held = new Promise<void>((r) => (release = r));
+    await page.route("**/contact", async (route) => {
+      if (route.request().method() === "POST") await held;
+      await route.continue();
+    });
+    await page.getByRole("button", { name: "Send message" }).click();
+    await expect(page.getByRole("button", { name: /Sending/ })).toBeDisabled();
+    release();
     await expect(page.getByRole("status")).toContainText("Thanks! Your message is on its way.");
   });
 

@@ -112,6 +112,45 @@ Until then it says it isn't set up.
 | `npm run validate` | Check content and photo metadata only |
 | `npm run audit` | Check production dependencies for known vulnerabilities |
 
+## Testing & Verification
+
+Run these before every deploy. Each must finish with exit code 0.
+
+```bash
+npm run check        # lint, typecheck, content validation, unit tests, production build
+npm run test:e2e     # browser tests against that build (run `npm run check` or `npm run build` first)
+npm run audit        # known vulnerabilities in production dependencies
+```
+
+To run one step on its own:
+
+| Command | What it checks |
+|---|---|
+| `npm run lint` | ESLint (Next.js rules). Add `-- --max-warnings=0` to fail on warnings too. |
+| `npm run typecheck` | TypeScript, including generated route types |
+| `npm run validate` | Bench files, photos and their metadata. "Within 10 m" lines are hints about benches that sit close together, not errors. |
+| `npm test` | Unit tests (Vitest, `tests/unit/`): content rules, contact form validation and spam checks, sun and map maths, and the loading, error and 404 screens |
+| `npm run build` | Production build. Every page should be listed as prerendered. |
+| `npm run test:e2e` | Browser tests (Playwright, `tests/e2e/`) in desktop Chrome and a Pixel 7 |
+
+The browser tests cover:
+
+- Every page renders with one heading, a unique title and no console errors
+- No sideways scrolling at 375px, 412px, 1280px and 1440px
+- Accessibility (axe, WCAG 2.2 AA) in light and dark mode, plus a check that every control has
+  an accessible name at phone and desktop widths
+- User paths: home → bench → bench list → map, tag links, header links and the 404 page's links
+- The map: filters, toggles, "Find the nearest bench" (found, far away, and no answer)
+- The contact form: empty fields, a bad email, a too-short message, the sending state, success,
+  and keeping what you typed after an error
+- Offline reading, share images, RSS, the sitemap, security headers and photo metadata
+- A performance budget for script size, largest paint and layout shift
+
+Useful options: `npx playwright test -g "contact form"` runs matching tests only,
+`--project=desktop` skips the phone run. When a test fails, its trace is saved under
+`test-results/`; open it with `npx playwright show-trace <path to trace.zip>` to step through
+what the browser saw.
+
 ## Environment variables
 
 Copy [`.env.example`](.env.example) to `.env.local` for local work. In production, set them in
