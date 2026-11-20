@@ -126,9 +126,25 @@ export function BenchMap({
   useEffect(() => {
     let cancelled = false;
     let observer: ResizeObserver | undefined;
+    let nearby: IntersectionObserver | undefined;
     const markers = benchMarkers.current;
     (async () => {
       try {
+        // Start only when the map is about to scroll into view: maps further down a page then cost
+        // no Leaflet script and no OpenStreetMap tile requests for readers who never get there.
+        await new Promise<void>((resolve) => {
+          if (!el.current || !("IntersectionObserver" in window)) return resolve();
+          nearby = new IntersectionObserver(
+            (entries) => {
+              if (!entries.some((e) => e.isIntersecting)) return;
+              nearby?.disconnect();
+              resolve();
+            },
+            { rootMargin: "600px 0px" },
+          );
+          nearby.observe(el.current);
+        });
+        if (cancelled) return;
         // Leaflet touches `window` on import, so load it only in the browser.
         const L = (await import("leaflet")).default;
         if (cancelled || !el.current || map.current) return;
@@ -232,6 +248,7 @@ export function BenchMap({
     })();
     return () => {
       cancelled = true;
+      nearby?.disconnect();
       observer?.disconnect();
       map.current?.remove();
       map.current = null;
@@ -360,7 +377,7 @@ export function BenchMap({
                   type="button"
                   aria-pressed={on}
                   onClick={() => toggleFilter(f.slug)}
-                  className={`min-h-11 rounded-md border px-4 text-[0.95rem] ${on ? "border-ink bg-ink font-semibold text-paper-raised" : "border-rule bg-paper-raised hover:border-pond"}`}
+                  className={`min-h-11 rounded-md border px-4 text-ui ${on ? "border-ink bg-ink font-semibold text-paper-raised" : "border-rule bg-paper-raised hover:border-pond"}`}
                 >
                   {f.label}
                 </button>
@@ -377,7 +394,7 @@ export function BenchMap({
         </div>
       )}
       {showToggles && (
-        <fieldset className="mb-4 flex flex-wrap gap-x-6 gap-y-1 text-[0.98rem]">
+        <fieldset className="mb-4 flex flex-wrap gap-x-6 gap-y-1 text-ui">
           <legend className="sr-only">Show on the map</legend>
           <label className="inline-flex min-h-11 cursor-pointer items-center gap-2">
             <input type="checkbox" checked={showBenches} onChange={(e) => setShowBenches(e.target.checked)} className="h-5 w-5 accent-[var(--pond)]" />

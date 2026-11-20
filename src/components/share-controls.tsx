@@ -31,7 +31,7 @@ export function ShareControls({ url, title }: { url: string; title: string }) {
   }
 
   const button =
-    "inline-flex min-h-11 items-center rounded-md border border-rule bg-paper-raised px-4 font-sans text-[0.95rem] text-ink no-underline hover:border-pond hover:text-pond cursor-pointer";
+    "inline-flex min-h-11 items-center rounded-md border border-rule bg-paper-raised px-4 font-sans text-ui text-ink no-underline hover:border-pond hover:text-pond cursor-pointer";
 
   return (
     <div>

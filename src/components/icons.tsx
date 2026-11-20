@@ -15,14 +15,6 @@ export function BenchIcon({ className, title }: IconProps) {
   );
 }
 
-export function TrashIcon({ className, title }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} {...a11y(title)}>
-      <path d="M5 7h14M9.5 7V5h5v2M6.5 7l1 12h9l1-12" />
-    </svg>
-  );
-}
-
 export function LeafIcon({ className, title }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} {...a11y(title)}>

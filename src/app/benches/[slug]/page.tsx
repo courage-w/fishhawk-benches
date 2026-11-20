@@ -90,7 +90,9 @@ export default async function BenchPage({ params }: PageProps<"/benches/[slug]">
 
       <header className="frame pt-10 pb-8 sm:pt-14">
         <nav aria-label="Breadcrumb" className="meta">
-          <Link href="/benches">Benches</Link>
+          <Link href="/benches" className="inline-flex min-h-11 items-center">
+            Benches
+          </Link>
           <span aria-hidden="true"> / </span>
           <span aria-current="page">{bench.title}</span>
         </nav>

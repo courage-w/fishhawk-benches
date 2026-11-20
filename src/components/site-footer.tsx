@@ -30,7 +30,7 @@ export function SiteFooter() {
           <ul className="grid grid-cols-2 gap-x-8 sm:grid-cols-1">
             {LINKS.map((l) => (
               <li key={l.href}>
-                <Link href={l.href} className="inline-flex min-h-11 items-center font-sans text-[0.98rem] text-ink-soft no-underline hover:text-pond hover:underline">
+                <Link href={l.href} className="inline-flex min-h-11 items-center font-sans text-ui text-ink-soft no-underline hover:text-pond hover:underline">
                   {l.label}
                 </Link>
               </li>

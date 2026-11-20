@@ -17,7 +17,7 @@ export function NavLinks({ items }: { items: readonly Item[] }) {
             <Link
               href={item.href}
               aria-current={current ? "page" : undefined}
-              className="inline-flex min-h-11 items-center rounded-md px-2 font-sans text-[0.98rem] text-ink-soft no-underline hover:text-pond aria-[current=page]:font-semibold aria-[current=page]:text-ink aria-[current=page]:underline aria-[current=page]:decoration-blaze aria-[current=page]:decoration-[3px] aria-[current=page]:underline-offset-8"
+              className="inline-flex min-h-11 items-center rounded-md px-2 font-sans text-ui text-ink-soft no-underline hover:text-pond aria-[current=page]:font-semibold aria-[current=page]:text-ink aria-[current=page]:underline aria-[current=page]:decoration-blaze aria-[current=page]:decoration-[3px] aria-[current=page]:underline-offset-8"
             >
               {item.label}
             </Link>

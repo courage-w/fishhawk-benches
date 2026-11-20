@@ -20,6 +20,8 @@
   --rule: #d3d9cf;
   --blaze: #f0c419;
   --on-blaze: #1b2621;
+  /* Form errors only: a muted brick, like old park-sign paint. */
+  --danger: #9b3b2f;
   --focus: #1d5c64;
   --tile-filter: saturate(0.55) sepia(0.12) brightness(1.02);
   color-scheme: light;
@@ -39,6 +41,7 @@
     --rule: #2c4145;
     --blaze: #f0c419;
     --on-blaze: #142326;
+    --danger: #f0b2a6;
     --focus: #b4dde1;
     --tile-filter: invert(0.92) hue-rotate(180deg) saturate(0.45) brightness(0.9) contrast(0.9);
     color-scheme: dark;
@@ -57,6 +60,12 @@
   --color-rule: var(--rule);
   --color-blaze: var(--blaze);
   --color-on-blaze: var(--on-blaze);
+  --color-danger: var(--danger);
+  /* Overpass sizes: small print (.meta) is 0.9rem; these two cover every control and label. */
+  --text-ui: 0.95rem;
+  --text-ui--line-height: 1.4;
+  --text-ui-lg: 1.05rem;
+  --text-ui-lg--line-height: 1.4;
   --font-serif: var(--font-newsreader), Georgia, "Times New Roman", serif;
   --font-sans: var(--font-overpass), "Segoe UI", system-ui, sans-serif;
 }
@@ -104,6 +113,16 @@ body {
   a:hover {
     color: var(--pond-deep);
     text-decoration-thickness: 2px;
+  }
+  /* Pressed feedback for every button: a 1px push, like a physical sign plate. */
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+  button:not(:disabled):active {
+    transform: translateY(1px);
+  }
+  button:disabled {
+    cursor: not-allowed;
   }
 }
 
@@ -391,12 +410,13 @@ body {
   font-size: 1rem;
   line-height: 1.4;
 }
+/* Opaque, so the credit line keeps WCAG contrast over any part of the map in either theme. */
 .bench-map .leaflet-control-attribution {
-  background: color-mix(in srgb, var(--paper-raised) 85%, transparent);
-  color: var(--ink-soft);
+  background: var(--paper-raised);
+  color: var(--ink);
 }
 .bench-map .leaflet-control-attribution a {
-  color: var(--pond);
+  color: var(--pond-deep);
 }
 .bench-map .leaflet-bar a {
   background: var(--paper-raised);

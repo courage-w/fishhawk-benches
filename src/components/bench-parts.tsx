@@ -130,7 +130,7 @@ export function TagLinks({ bench }: { bench: Bench }) {
         <li key={t}>
           <Link
             href={`/benches/tag/${t}`}
-            className="inline-flex min-h-11 items-center rounded-md border border-rule bg-paper-raised px-4 font-sans text-[0.95rem] text-ink no-underline hover:border-pond hover:text-pond"
+            className="inline-flex min-h-11 items-center rounded-md border border-rule bg-paper-raised px-4 font-sans text-ui text-ink no-underline hover:border-pond hover:text-pond"
           >
             {TAGS[t].label}
           </Link>

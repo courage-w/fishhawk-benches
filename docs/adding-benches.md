@@ -19,6 +19,8 @@
    npm run locate-views -- --preview
    ```
    If a match is wrong, set `seatView: { center: 0.4, width: 0.25 }` on the panorama by hand.
+   Only `center` changes the page: every frame is drawn the same width (see `SEAT_VIEW_HEIGHTS`
+   in `src/components/panorama.tsx`).
 6. If you renamed anything, refresh the blurred loading previews: `npm run placeholders`.
 7. Preview with `SHOW_DRAFTS=true npm run dev`, set `status: published`, then:
    ```bash

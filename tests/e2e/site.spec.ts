@@ -36,6 +36,18 @@ test.describe("pages", () => {
     });
   }
 
+  for (const width of [375, 1440]) {
+    test(`no sideways scroll at ${width}px`, async ({ page }, info) => {
+      test.skip(info.project.name === "mobile", "sizes set here; one project is enough");
+      await page.setViewportSize({ width, height: 900 });
+      for (const path of PAGES) {
+        await page.goto(path);
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+        expect(overflow, path).toBeLessThanOrEqual(0);
+      }
+    });
+  }
+
   test("no broken images on the home page", async ({ page }) => {
     await page.goto("/");
     // Scroll everything into view so lazy images load.
@@ -49,8 +61,9 @@ test.describe("pages", () => {
 });
 
 test.describe("accessibility (axe, WCAG 2.2 AA rules)", () => {
-  for (const path of PAGES) {
-    test(path, async ({ page }) => {
+  for (const path of PAGES) for (const scheme of ["light", "dark"] as const) {
+    test(`${path} (${scheme})`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
       await page.goto(path);
       await page.waitForLoadState("networkidle");
       const results = await new AxeBuilder({ page })
@@ -82,7 +95,20 @@ test.describe("bench pages", () => {
     await expect(page.getByText("Looks out over the water")).toBeVisible();
     await expect(page.getByText("No shade, so it gets hot at midday")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Nearby benches" })).toBeVisible();
+    // Maps start only when scrolled near, so bring this one into view first.
+    await page.locator(".bench-map").scrollIntoViewIfNeeded();
     await expect(page.locator(".bench-map .pin-bench").first()).toBeVisible();
+  });
+
+  test("maps further down the page wait until you scroll to them", async ({ page }) => {
+    const tiles: string[] = [];
+    page.on("request", (r) => r.url().startsWith("https://tile.openstreetmap.org/") && tiles.push(r.url()));
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    expect(tiles).toEqual([]);
+    await page.getByRole("heading", { name: "Where they are" }).scrollIntoViewIfNeeded();
+    await expect(page.locator(".bench-map .pin-bench").first()).toBeVisible();
+    expect(tiles.length).toBeGreaterThan(0);
   });
 
   test("panorama fills wide screens and opens on the seat view", async ({ page }, info) => {
@@ -118,6 +144,7 @@ test.describe("bench pages", () => {
     await expect(inset).toHaveAttribute("data-visible", "true");
     const strip = page.getByRole("region", { name: /Panorama from the bench/ });
     const before = await strip.evaluate((el) => el.scrollLeft);
+    await page.locator(".pano-overview").scrollIntoViewIfNeeded();
     const map = (await page.locator(".pano-overview").boundingBox())!;
     await page.mouse.click(map.x + map.width * 0.97, map.y + map.height / 2);
     await expect.poll(() => strip.evaluate((el) => el.scrollLeft)).toBeGreaterThan(before);

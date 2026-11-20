@@ -7,8 +7,8 @@ import { TOPICS } from "@/lib/contact/topics";
 const initial: ContactState = { status: "idle", message: "" };
 
 const field =
-  "mt-1 block w-full rounded-md border border-rule bg-paper-raised px-3 py-2.5 text-lg text-ink placeholder:text-ink-soft/70 focus:border-pond aria-[invalid=true]:border-[#9b3b2f] dark:aria-[invalid=true]:border-[#e59a8c]";
-const errorText = "mt-1 text-base text-[#9b3b2f] dark:text-[#f0b2a6]";
+  "mt-1 block w-full rounded-md border border-rule bg-paper-raised px-3 py-2.5 text-lg text-ink placeholder:text-ink-soft/70 focus:border-pond aria-[invalid=true]:border-danger";
+const errorText = "mt-1 text-base text-danger";
 
 export function ContactForm() {
   const [state, action, pending] = useActionState(submitContact, initial);
@@ -51,7 +51,7 @@ export function ContactForm() {
   return (
     <form action={action} onSubmit={recordElapsed} noValidate className="max-w-xl space-y-6">
       {state.status === "error" && (
-        <div ref={statusRef} tabIndex={-1} role="alert" className="rounded-lg border border-[#9b3b2f] bg-paper-raised p-4 dark:border-[#e59a8c]">
+        <div ref={statusRef} tabIndex={-1} role="alert" className="rounded-lg border border-danger bg-paper-raised p-4">
           {state.message}
         </div>
       )}
@@ -123,7 +123,7 @@ export function ContactForm() {
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex min-h-12 cursor-pointer items-center rounded-md bg-pond px-6 font-sans text-[1.05rem] font-semibold text-paper hover:bg-pond-deep disabled:cursor-wait disabled:opacity-70"
+        className="inline-flex min-h-12 cursor-pointer items-center rounded-md bg-pond px-6 font-sans text-ui-lg font-semibold text-paper hover:bg-pond-deep disabled:cursor-wait disabled:opacity-70"
       >
         {pending ? "Sending…" : "Send message"}
       </button>
