@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Newsreader } from "next/font/google";
+import { Newsreader, Overpass } from "next/font/google";
 import { OfflineSupport } from "@/components/offline-support";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -12,6 +12,14 @@ const newsreader = Newsreader({
   subsets: ["latin"],
   axes: ["opsz"],
   style: ["normal", "italic"],
+  display: "swap",
+});
+
+// Labels, buttons and facts. Overpass is drawn from Highway Gothic, the lettering on US road and
+// park signs, so the guide's "signage" reads like the signs along the paths.
+const overpass = Overpass({
+  variable: "--font-overpass",
+  subsets: ["latin"],
   display: "swap",
 });
 
@@ -38,7 +46,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${newsreader.variable} antialiased`}>
+    <html lang="en" className={`${newsreader.variable} ${overpass.variable} antialiased`}>
       <body className="flex min-h-dvh flex-col">
         <a href="#main" className="skip-link">
           Skip to content

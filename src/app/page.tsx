@@ -43,7 +43,7 @@ export default function HomePage() {
       />
 
       <section className="frame pt-10 pb-8 sm:pt-16 sm:pb-10">
-        <h1 className="display max-w-3xl text-[2.6rem] sm:text-6xl">Find a nice place to sit for a while.</h1>
+        <h1 className="display max-w-4xl text-[2.9rem] sm:text-7xl">Find a nice place to sit for a while.</h1>
         <p className="lede mt-5">
           {count} benches around FishHawk Ranch, each photographed from the seat, with honest notes on shade,
           trash cans, sunsets, and whether you&apos;ll be looking at a pond or a road.
@@ -62,8 +62,12 @@ export default function HomePage() {
             label={`Panorama from ${hero.title}. Scroll sideways to look around.`}
             eager
           />
-          <figcaption className="frame meta mt-2">
-            From <Link href={`/benches/${hero.slug}`}>{hero.title}</Link>. Swipe or drag the photo to look around.
+          <figcaption className="frame meta mt-3 flex items-start gap-2.5">
+            <span className="blaze mt-0.5 shrink-0" aria-hidden="true" />
+            <span>
+              From <Link href={`/benches/${hero.slug}`}>{hero.title}</Link>. The yellow frame is what you see
+              sitting down. Swipe or drag the photo to look around.
+            </span>
           </figcaption>
         </figure>
       )}
@@ -89,7 +93,7 @@ export default function HomePage() {
                           {...blur(bench.slug, photo.file)}
                         />
                       </span>
-                      <span className="mt-3 block text-base text-moss">{label}</span>
+                      <span className="sign mt-3 block text-moss">{label}</span>
                       <span className="block text-2xl leading-tight group-hover:text-pond group-hover:underline">
                         {bench.title}
                       </span>

@@ -12,7 +12,7 @@ type Props = {
   height: number;
   /** Optional tiny base64 image shown while the panorama loads. */
   blurDataURL?: string;
-  /** Where the view from the seat is (fractions of the width). Marked with two lines and scrolled into view. */
+  /** Where the view from the seat is (fractions of the width). Marked with a yellow frame and scrolled into view. */
   seatView?: SeatView;
   /** Above the fold: load immediately at high priority. */
   eager?: boolean;

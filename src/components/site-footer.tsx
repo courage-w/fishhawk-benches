@@ -21,7 +21,7 @@ export function SiteFooter() {
             A small, independent guide to sitting down outside in FishHawk Ranch. Not affiliated with
             any homeowners&apos; association, district, or county office.
           </p>
-          <p className="meta mt-4">
+          <p className="caution mt-5">
             Near the ponds, keep an eye out for alligators and snakes, and stay back from the water&apos;s
             edge.
           </p>
@@ -30,7 +30,7 @@ export function SiteFooter() {
           <ul className="grid grid-cols-2 gap-x-8 sm:grid-cols-1">
             {LINKS.map((l) => (
               <li key={l.href}>
-                <Link href={l.href} className="inline-flex min-h-11 items-center text-ink-soft no-underline hover:text-pond hover:underline">
+                <Link href={l.href} className="inline-flex min-h-11 items-center font-sans text-[0.98rem] text-ink-soft no-underline hover:text-pond hover:underline">
                   {l.label}
                 </Link>
               </li>

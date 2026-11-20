@@ -313,10 +313,10 @@ export function BenchMap({
         const css = getComputedStyle(document.documentElement);
         youMarker.current?.remove();
         youMarker.current = L.circleMarker([here.lat, here.lng], {
-          radius: 8,
-          color: css.getPropertyValue("--paper-raised").trim() || "#fff",
+          radius: 9,
+          color: css.getPropertyValue("--on-blaze").trim() || "#1b2621",
           weight: 3,
-          fillColor: css.getPropertyValue("--pond").trim() || "#2b6cb0",
+          fillColor: css.getPropertyValue("--blaze").trim() || "#f0c419",
           fillOpacity: 1,
         })
           .bindTooltip("You are here")
@@ -360,7 +360,7 @@ export function BenchMap({
                   type="button"
                   aria-pressed={on}
                   onClick={() => toggleFilter(f.slug)}
-                  className={`min-h-11 rounded-full border px-4 ${on ? "border-[var(--pond)] bg-[var(--pond)] text-[var(--paper-raised)]" : "border-rule"}`}
+                  className={`min-h-11 rounded-md border px-4 text-[0.95rem] ${on ? "border-ink bg-ink font-semibold text-paper-raised" : "border-rule bg-paper-raised hover:border-pond"}`}
                 >
                   {f.label}
                 </button>
@@ -377,7 +377,7 @@ export function BenchMap({
         </div>
       )}
       {showToggles && (
-        <fieldset className="mb-4 flex flex-wrap gap-x-6 gap-y-1">
+        <fieldset className="mb-4 flex flex-wrap gap-x-6 gap-y-1 text-[0.98rem]">
           <legend className="sr-only">Show on the map</legend>
           <label className="inline-flex min-h-11 cursor-pointer items-center gap-2">
             <input type="checkbox" checked={showBenches} onChange={(e) => setShowBenches(e.target.checked)} className="h-5 w-5 accent-[var(--pond)]" />
@@ -411,7 +411,7 @@ export function BenchMap({
             type="button"
             onClick={findNearest}
             disabled={locating || !ready}
-            className="min-h-11 rounded-full bg-[var(--moss)] px-5 text-[var(--paper-raised)] disabled:opacity-60"
+            className="min-h-11 rounded-md bg-pond px-5 font-semibold text-paper-raised hover:bg-pond-deep disabled:opacity-60"
           >
             {locating ? "Finding you…" : chosen.length > 0 ? "Find the nearest matching bench" : "Find the nearest bench"}
           </button>

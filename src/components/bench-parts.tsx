@@ -44,7 +44,7 @@ export function BenchRow({ bench, headingLevel = 3, eager = false }: { bench: Be
         />
       </Link>
       <div className="flex flex-col justify-center">
-        <Heading className="text-[1.65rem] leading-tight">
+        <Heading className="text-[1.85rem] leading-[1.1] tracking-[-0.01em]">
           <Link href={`/benches/${bench.slug}`} className="text-ink no-underline hover:text-pond hover:underline">
             {bench.title}
           </Link>
@@ -74,11 +74,11 @@ export function FactList({ bench }: { bench: Bench }) {
     ...(bench.sun ? [["Sun", sunSummary(bench.sun)] as [string, string]] : []),
   ];
   return (
-    <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2">
+    <dl className="grid grid-cols-[auto_1fr] border-t border-rule">
       {facts.map(([k, v]) => (
         <div key={k} className="contents">
-          <dt className="text-ink-soft">{k}</dt>
-          <dd>{v}</dd>
+          <dt className="sign border-b border-rule py-2.5 pr-6 text-ink-soft">{k}</dt>
+          <dd className="border-b border-rule py-2 leading-snug">{v}</dd>
         </div>
       ))}
     </dl>
@@ -130,7 +130,7 @@ export function TagLinks({ bench }: { bench: Bench }) {
         <li key={t}>
           <Link
             href={`/benches/tag/${t}`}
-            className="inline-flex min-h-11 items-center rounded-full border border-rule px-4 text-base text-ink-soft no-underline hover:border-pond hover:text-pond"
+            className="inline-flex min-h-11 items-center rounded-md border border-rule bg-paper-raised px-4 font-sans text-[0.95rem] text-ink no-underline hover:border-pond hover:text-pond"
           >
             {TAGS[t].label}
           </Link>

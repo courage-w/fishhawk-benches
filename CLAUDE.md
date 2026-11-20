@@ -25,7 +25,7 @@ photo, panorama, pros/cons, and a Leaflet map of benches and trash cans.
 
 - Pros/cons come from `features` via `RULES`; only add `extraPros`/`extraCons` for things rules can't express. Don't edit generated text in pages.
 - Pages must stay static: no `cookies()`/`headers()`/`Date.now()` in render paths (the contact action is the exception).
-- Design tokens live in `src/app/globals.css` (paper/ink/pond/moss/reed/rule); one typeface (Newsreader). No new fonts, colors or UI libraries without reason.
+- Design tokens live in `src/app/globals.css` (paper/ink/pond/moss/reed/rule/blaze). Two typefaces: Newsreader for reading text and headings, Overpass (road-sign lettering) for labels, buttons, facts and small print (`.meta`, `.sign`). Blaze yellow is reserved for "where you are / where you'd look": the seat-view frame, the active pin, "you are here", the current nav item and the alligator caution. No new fonts, colors or UI libraries without reason.
 - Copy is plain, calm, sentence case. Every bench fact must be visible in its photos or confirmed by the owner.
 - Never set `status: published` on a bench without the owner's OK.
 
